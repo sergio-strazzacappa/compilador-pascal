@@ -1,175 +1,96 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <err.h>
 #include "token.h"
 
-char* obtener_simbolo(Token t) {
-    char* simbolo = "";
-    int e = -1;
+void obtener_simbolo(Token t, char *str) {
+    int index = -1;
+    str[0] = '\0';
 
-    if (!strcmp(t.etiqueta, "ASIGNACION")) {
-        e = 1;
-    } else if (!strcmp(t.etiqueta, "DOS_PUNTOS")) {
-        e = 2;
-    } else if (!strcmp(t.etiqueta, "PUNTO_Y_COMA")) {
-        e = 3;
-    } else if (!strcmp(t.etiqueta, "PUNTO")) {
-        e = 4;
-    } else if (!strcmp(t.etiqueta, "COMA")) {
-        e = 5;
-    } else if (!strcmp(t.etiqueta, "PARENTESIS_IZQUIERDO")) {
-        e = 6;
-    } else if (!strcmp(t.etiqueta, "PARENTESIS_DERECHO")) {
-        e = 7;
-    } else if (!strcmp(t.lexema, "MENOR_IGUAL")) {
-        e = 8;
-    } else if (!strcmp(t.lexema, "DISTINTO")) {
-        e = 9;
-    } else if (!strcmp(t.lexema, "MENOR")) {
-        e = 10;
-    } else if (!strcmp(t.lexema, "MAYOR_IGUAL")) {
-        e = 11;
-    } else if (!strcmp(t.lexema, "MAYOR")) {
-        e = 12;
-    } else if (!strcmp(t.lexema, "IGUAL")) {
-        e = 13;
-    } else if (!strcmp(t.lexema, "SUMA")) {
-        e = 14;
-    } else if (!strcmp(t.lexema, "RESTA")) {
-        e = 15;
-    } else if (!strcmp(t.lexema, "PRODUCTO")) {
-        e = 16;
-    } else if (!strcmp(t.lexema, "COCIENTE")) {
-        e = 17;
+    if (t.etiqueta == NULL) {
+        fprintf(stderr, "[ERROR] El token no tiene etiqueta asignada\n");
+        return;
     }
 
-    switch(e) {
-        case 1:
-            simbolo = ":=";
-            break;
-        case 2:
-            simbolo = ":";
-            break;
-        case 3:
-            simbolo = ";";
-            break;
-        case 4:
-            simbolo = ".";
-            break;
-        case 5:
-            simbolo = ",";
-            break;
-        case 6:
-            simbolo = "(";
-            break;
-        case 7:
-            simbolo = ")";
-            break;
-        case 8:
-            simbolo = "<=";
-            break;
-        case 9:
-            simbolo = "<>";
-            break;
-        case 10:
-            simbolo = "<";
-            break;
-        case 11:
-            simbolo = ">=";
-            break;
-        case 12:
-            simbolo = ">";
-            break;
-        case 13:
-            simbolo = "=";
-            break;
-        case 14:
-            simbolo = "+";
-            break;
-        case 15:
-            simbolo = "-";
-            break;
-        case 16:
-            simbolo = "*";
-            break;
-        case 17:
-            simbolo = "/";
-            break;
+    if (strcmp(t.etiqueta, "ASIGNACION") == 0)
+        index = 0;
+    else if (strcmp(t.etiqueta, "DOS_PUNTOS") == 0)
+        index = 1;
+    else if (strcmp(t.etiqueta, "PUNTO_Y_COMA") == 0)
+        index = 2;
+    else if (strcmp(t.etiqueta, "PUNTO") == 0)
+        index = 3;
+    else if (strcmp(t.etiqueta, "COMA") == 0)
+        index = 4;
+    else if (strcmp(t.etiqueta, "PARENTESIS_IZQUIERDO") == 0)
+        index = 5;
+    else if (strcmp(t.etiqueta, "PARENTESIS_DERECHO") == 0)
+        index = 6;
+    else if (t.lexema == NULL) {
+        fprintf(stderr, "[ERROR] El token no tiene un lexema asignado\n");
+        return;
     }
-    return simbolo;
+
+    if (strcmp(t.lexema, "MENOR_IGUAL") == 0)
+        index = 7;
+    else if (strcmp(t.lexema, "DISTINTO") == 0)
+        index = 8;
+    else if (strcmp(t.lexema, "MENOR") == 0)
+        index = 9;
+    else if (strcmp(t.lexema, "MAYOR_IGUAL") == 0)
+        index = 10;
+    else if (strcmp(t.lexema, "MAYOR") == 0)
+        index = 11;
+    else if (strcmp(t.lexema, "IGUAL") == 0)
+        index = 12;
+    else if (strcmp(t.lexema, "SUMA") == 0)
+        index = 13;
+    else if (strcmp(t.lexema, "RESTA") == 0)
+        index = 14;
+    else if (strcmp(t.lexema, "PRODUCTO") == 0)
+        index = 15;
+    else if (strcmp(t.lexema, "COCIENTE") == 0)
+        index = 16;
+    else {
+        fprintf(stderr, "[ERROR] El token no tiene un símbolo asignado\n");
+        return;
+    }
+
+    strcpy(str, SYMBOLS[index]);
 }
 
-// Liberar el espacio de memoria alocado a lexema en la función
-// llamadora
-char* obtener_lexema(Token t) {
-    char *lexema;
-    size_t max_size;
-
-    max_size = sizeof(t.etiqueta) + sizeof(t.valor) + 1;
-    lexema = malloc(sizeof(*lexema) + max_size);
-
-    if (lexema == NULL) {
-        err(EXIT_FAILURE, "malloc()");
-    }
-
+void obtener_lexema(Token t, char *str) {
     switch (t.tipo) {
-        case 1:
-        case 4:
-            lexema = obtener_simbolo(t);
+        case TOKEN:
+        case SIMBOLO:
+            obtener_simbolo(t, str);
             break;
-        case 2:
-            sprintf(lexema, "%ld", t.valor);
+        case NUMERO:
+            sprintf(str, "%ld", *t.valor);
             break;
-        case 3:
-            strcpy(lexema, t.lexema);
+        case PALABRA:
+            strcpy(str, t.lexema);
             break;
     }
-    return lexema;
 }
 
-// Liberar el espacio de memoria alocado a mensaje en la función
-// llamadora
-char* mostrar_token(Token t) {
-    char *mensaje;
-    size_t max_size;
-    size_t valor_size;
-    char *valor_s;
+void obtener_info_token(Token t, char *str) {
+    str[0] = '\0';
 
-    max_size = strlen("[ Etiqueta: ") + sizeof(t.etiqueta) +
-        strlen("\n  Valor: ") + sizeof(t.valor) +
-        strlen("\n  Lexema: ") + sizeof(t.lexema) + strlen(" ]") + 1;
-    mensaje = malloc(sizeof(*mensaje) + max_size);
+    strcpy(str, "[ Etiqueta: ");
+    strcat(str, t.etiqueta);
 
-    if (mensaje == NULL) {
-        err(EXIT_FAILURE, "malloc()");
+    if (t.valor != NULL) {
+        char valor_s[100];
+        sprintf(valor_s, "%ld", *t.valor);
+        strcat(str, "\n  Valor: ");
+        strcat(str, valor_s);
     }
 
-    valor_size = sizeof(t.valor) + 1;
-    valor_s = malloc(sizeof(*valor_s) + valor_size);
-
-    if (valor_s == NULL) {
-        err(EXIT_FAILURE, "malloc()");
+    if (t.lexema != NULL) {
+        strcat(str, "\n  Lexema: ");
+        strcat(str, t.lexema);
     }
 
-    strcpy(mensaje, "[ Etiqueta: ");
-    strcat(mensaje, t.etiqueta);
-
-    switch(t.tipo) {
-        case 2:
-            sprintf(valor_s, "%ld", t.valor);
-            strcat(mensaje, "\n  Valor: ");
-            strcat(mensaje, valor_s);
-            free(valor_s);
-            break;
-        case 3:
-        case 4:
-            strcat(mensaje, "\n  Lexema: ");
-            strcat(mensaje, t.lexema);
-            break;
-    }
-
-    strcat(mensaje, " ]");
-
-    return mensaje;
+    strcat(str, " ]\n");
 }
