@@ -1,10 +1,29 @@
-TARGET_EXEC := main
-BUILD_DIR   := ./build
-SRC_DIR     := ./src
+SRC_DIR := ./src
+INCLUDE_DIR := ./include
+BUILD_DIR := ./build
+BIN_DIR := ./bin
 
-$(BUILD_DIR)/$(TARGET_EXEC): $(SRC_DIR)/main.c $(SRC_DIR)/token.c $(SRC_DIR)/token.h $(SRC_DIR)/lexico.c $(SRC_DIR)/lexico.h
+CC := gcc
+CFLAGS := -Wall -I$(INCLUDE_DIR)
+
+TARGET_EXEC := $(BIN_DIR)/main
+OBJECTS := $(addprefix $(BUILD_DIR)/, main.o token.o) #lexico.o sintactico.o)
+
+.PHONY: clean all
+
+all: $(TARGET_EXEC)
+
+$(TARGET_EXEC): $(OBJECTS) | $(BIN_DIR)
+	$(CC) $(CFLAGS) $(^) -o $@
+
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BIN_DIR):
+	mkdir -p $(BIN_DIR)
+
+$(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
-	cc $(SRC_DIR)/main.c -o $(BUILD_DIR)/$(TARGET_EXEC)
 
 clean:
-	rm -rf $(BUILD_DIR)
+	rm -rf $(BUILD_DIR) $(BIN_DIR)

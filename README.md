@@ -6,6 +6,21 @@ Se implementa un compilador escrito en _C_ para un subconjunto del lenguaje de
 programación _Pascal_. Se va a ir ampliando la cantidad de constructores
 soportados.
 
+## Estructura del proyecto
+
+```
+./
+├── bin/
+├── build/
+├── include/
+│   ├── token.h
+├── src/
+│   ├── token.c
+├── tests/
+├── Makefile
+└── README.md
+```
+
 ## Constructores a tener en cuenta
 
 - Variables y subprogramas
@@ -27,60 +42,93 @@ soportados.
 
 ## Tokens
 
-- tipo
-    - TOKEN &lt;etiqueta&gt;
-    - NUMERO &lt;etiqueta=NUMERO, valor&gt;
-    - PALABRA &lt;etiqueta=IDENTIFICADOR, lexema&gt;
-    - SIMBOLO &lt;etiqueta=SIMBOLO, lexema&gt;
-- etiqueta
-- valor
-- lexema
+- Identificador
+    - Puntero a la TS
+- Numero
+    - Valor del entero
+- Booleano
+    - Valor del booleano
+- Tipo
+    - Entero
+    - Booleano
+- Program
+- Función
+- Procedimiento
+- Begin
+- End
+- Var
+- Write
+- Read
+- If
+- Then
+- Else
+- While
+- Do
+- Asignación
+- Or
+- And
+- Operador_relacional
+    - Menor_igual
+    - Menor
+    - Mayor_igual
+    - Igual
+    - Distinto
+- Algebraico_aditivo
+    - Suma
+    - Resta
+- Algebraico_multiplicativo
+    - Producto
+    - Cociente
+- Not
+- Punto_y_coma
+- Punto
+- Coma
+- Dos_puntos
+- Parentesis_izquierdo
+- Parentesis_derecho
 
 ### Palabras reservadas
 
-tipo = 3 \
-valor = 0
-
-- <"PROGRAM", "PROGRAM">
-- <"FUNCTION", "FUNCTION">
-- <"PROCEDURE", "PROCEDURE">
-- <"BEGIN", "BEGIN">
-- <"END", "END">
-- <"VAR", "VAR">
-- <"WRITE", "WRITE">
-- <"READ", "READ">
-- <"IF", "IF">
-- <"THEN", "THEN">
-- <"ELSE", "ELSE">
-- <"WHILE", "WHILE">
-- <"DO", "DO">
-- <"OR", "OR">
-- <"AND", "AND">
-- <"NOT", "NOT">
-- <"BOOLEAN", "TRUE">
-- <"BOOLEAN", "FALSE">
-- <"TIPO", "INTEGER">
-- <"TIPO", "BOOLEAN">
+- PROGRAM
+- FUNCTION
+- PROCEDURE
+- BEGIN
+- END
+- VAR
+- WRITE
+- READ
+- IF
+- THEN
+- ELSE
+- WHILE
+- DO
+- OR
+- AND
+- NOT
+- TRUE
+- FALSE
+- INTEGER
+- TIPO
 
 ### Símbolos
 
-- <"ASIGNACION", "">
-- <"DOS_PUNTOS", "">
-- <"OPERADOR_RELACIONAL", "MENOR_IGUAL">
-- <"OPERADOR_RELACIONAL", "DISTINTO">
-- <"OPERADOR_RELACIONAL", "MENOR">
-- <"OPERADOR_RELACIONAL", "MAYOR_IGUAL">
-- <"OPERADOR_RELACIONAL", "MAYOR">
-- <"OPERADOR_RELACIONAL", "IGUAL">
-- <"ALGEBRAICO_ADITIVO", "SUMA">
-- <"ALGEBRAICO_ADITIVO", "RESTA">
-- <"ALGEBRAICO_MULTIPLICATIVO", "PRODUCTO">
-- <"ALGEBRAICO_MULTIPLICATIVO", "COCIENTE">
-- <"PUNTO_Y_COMA", "">
-- <"PUNTO", "">
-- <"COMA", "">
-- <"PARENTESIS_IZQUIERDO", "">
-- <"PARENTESIS_DERECHO", "">
+- ASIGNACION
+- DOS_PUNTOS
+- &lt;"OPERADOR_RELACIONAL", "MENOR_IGUAL"&gt;
+- &lt;"OPERADOR_RELACIONAL", "DISTINTO"&gt;
+- &lt;"OPERADOR_RELACIONAL", "MENOR"&gt;
+- &lt;"OPERADOR_RELACIONAL", "MAYOR_IGUAL"&gt;
+- &lt;"OPERADOR_RELACIONAL", "MAYOR"6gt;
+- &lt;"OPERADOR_RELACIONAL", "IGUAL"&gt;
+- &lt;"ALGEBRAICO_ADITIVO", "SUMA"&gt;
+- &lt;"ALGEBRAICO_ADITIVO", "RESTA"&gt;
+- &lt;"ALGEBRAICO_MULTIPLICATIVO", "PRODUCTO"&gt;
+- &lt;"ALGEBRAICO_MULTIPLICATIVO", "COCIENTE"&gt;
+- PUNTO_Y_COMA
+- PUNTO
+- COMA
+- PARENTESIS_IZQUIERDO
+- PARENTESIS_DERECHO
 
 ## TODO
 
