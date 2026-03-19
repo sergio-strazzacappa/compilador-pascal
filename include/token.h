@@ -1,8 +1,6 @@
 #ifndef TOKEN_H
 #define TOKEN_H
 
-#include<stdlib.h>
-
 /*
  * Archivo para manejar los tokens
  *
@@ -44,71 +42,39 @@
  *      2. Valor - Solo números
  *      3. Lexema - Algunos símbolos o palabras reservadas
  *      4. Puntero a la TS - Identificadores
- *
- * TODO: Los identificadores tienen que tener un puntero a la tabla de símbolos
- * y almacenar el lexema en dicha tabla.
  */
 
-enum tok_t {
-    TOK_ID,
-    TOK_NUM,
-    TOK_BOOL,
-    TOK_T,
-    TOK_PROGRAM,
-    TOK_FUNCTION,
-    TOK_PROCEDURE,
-    TOK_BEGIN,
-    TOK_END,
-    TOK_VAR,
-    TOK_WRITE,
-    TOK_READ,
-    TOK_IF,
-    TOK_THEN,
-    TOK_ELSE,
-    TOK_WHILE,
-    TOK_DO,
-    TOK_ASIG,
-    TOK_OR,
-    TOK_AND,
-    TOK_OP_REL,
-    TOK_ALG_AD,
-    TOK_ALG_MUL,
-    TOK_NOT,
-    TOK_PUNTO_Y_COMA,
-    TOK_PUNTO,
-    TOK_COMA,
-    TOK_DOS_PUNTOS,
-    TOK_PAR_IZQ,
-    TOK_PAR_DER
-};
+#include <stddef.h>
 
-enum tok_sub_t {
-    MENOR_IGUAL,
-    MENOR,
-    MAYOR_IGUAL,
-    MAYOR,
-    IGUAL,
-    DISTINTO,
-    SUMA,
-    RESTA,
-    PRODUCTO,
-    COCIENTE
-};
+typedef enum tipo_e {
+    TOK_ID, TOK_NUM, TOK_BOOL, TOK_T, TOK_PROGRAM, TOK_FUNCTION,
+    TOK_PROCEDURE, TOK_BEGIN, TOK_END, TOK_VAR, TOK_WRITE, TOK_READ,
+    TOK_IF, TOK_THEN, TOK_ELSE, TOK_WHILE, TOK_DO, TOK_ASIG, TOK_OR,
+    TOK_AND, TOK_OP_REL, TOK_ALG_AD, TOK_ALG_MUL, TOK_NOT, TOK_PUNTO_Y_COMA,
+    TOK_PUNTO, TOK_COMA, TOK_DOS_PUNTOS, TOK_PAR_IZQ, TOK_PAR_DER
+} tipo_t;
 
-typedef struct Token {
-    enum tok_t tipo;
+typedef enum subtipo_e {
+    MENOR_IGUAL, MENOR, MAYOR_IGUAL, MAYOR, IGUAL, DISTINTO,
+    SUMA, RESTA, PRODUCTO, COCIENTE
+} subtipo_t;
+
+typedef struct token_s {
+    tipo_t tipo;
     int linea;
 
     union {
         long valor;
-        enum tok_sub_t lexema;
-        char *ptr_TS; // TODO: Hacer el struct de la TS. Guarda l lexema
-    } data;
-} Token;
+        subtipo_t subtipo;
+        int ts_indice;
+    } data_u;
+} tok_t;
 
-int obtener_token(const Token *tok, char *str);
-int obtener_numero(const Token *tok, char *str, size_t len);
-int obtener_lexema(const Token *tok, char *str);
-int obtener_info_token(const Token *tok, char *str, size_t len);
+extern const tipo_t TOKENS[];
+
+int obtener_lexema(const tok_t *const tok, char *str);
+int obtener_numero(const tok_t *const tok, char *str, const size_t len);
+int obtener_lexema_sim(const tok_t *const tok, char *str);
+int obtener_info_token(const tok_t *const tok, char *str, const size_t len);
 
 #endif
