@@ -1,10 +1,11 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
+#include "token.h"
 #include "ts.h"
 
-static EntradaTS *TS; // Arreglo de entradas 
-static size_t size = TS_SIZE_INICIAL; 
+static ts_entrada_t *TS; // Arreglo de entradas
+static size_t size = TS_SIZE_INICIAL;
 static size_t ocupado = 0;
 
 static const char *palabras_reservadas[N_PALABRAS_RESERVADAS] = {
@@ -14,18 +15,22 @@ static const char *palabras_reservadas[N_PALABRAS_RESERVADAS] = {
     "READ", "WRITE"
 };
 
+/*
+ * Carga en la TS las palabras reservadas
+ */
 int inicializar_ts(void) {
-    TS = (EntradaTS *)calloc(TS_SIZE_INICIAL, sizeof(EntradaTS));
+    TS = (ts_entrada_t *)calloc(TS_SIZE_INICIAL, sizeof(ts_entrada_t));
 
     if (TS == NULL) {
         fprintf(stderr, "[ERROR] Fallo en asignar memoria para la TS en %s\n",
             "inicializar_ts()");
         return EXIT_FAILURE;
     }
-    
-    for (int i = 0; i < N_PALABRAS_RESERVADAS; i++) {
-        // TODO: Añadir el tipo de token
-        EntradaTS e;
+
+
+    for (size_t i = 0; i < N_PALABRAS_RESERVADAS; i++) {
+        ts_entrada_t e;
+        e.tipo = TOKENS[i];
         e.lexema = (char *)palabras_reservadas[i];
 
         if (insertar_ts(e)) {
@@ -40,7 +45,7 @@ int inicializar_ts(void) {
  * no se encuentra
  */
 int buscar_ts(const char *const lexema) {
-    for (int i = 0; i < ocupado; i++) {
+    for (size_t i = 0; i < ocupado; i++) {
         if (strcmp(lexema, TS[i].lexema) == 0) {
             return i;
         }
@@ -53,9 +58,9 @@ int buscar_ts(const char *const lexema) {
  * El puntero devuelto puede quedar invalido si se redimensiona la TS y se
  * hace un realloc()
  */
-EntradaTS *buscar_ts_por_indice(const int indice) {
+ts_entrada_t *buscar_ts_por_indice(const size_t indice) {
     if (indice >= ocupado) {
-        fprintf(stderr, "[ERROR] Indice fuera de rango en %s\n", 
+        fprintf(stderr, "[ERROR] Indice fuera de rango en %s\n",
             "buscar_ts_por_indice(int)");
         return NULL;
     }
@@ -66,14 +71,16 @@ EntradaTS *buscar_ts_por_indice(const int indice) {
 /*
  * Inserta una entrada en la TS y devuelve el indice correspondiente
  */
-int insertar_ts(const EntradaTS entrada) {
-    if (buscar_ts(entrada.lexema) != -1) {
-        return EXIT_SUCCESS;
+int insertar_ts(const ts_entrada_t entrada) {
+    size_t indice = buscar_ts(entrada.lexema);
+
+    if (indice != -1) {
+        return indice;
     }
 
     if (ocupado >= size) {
         if (redimensionar_ts() == EXIT_FAILURE) {
-            return EXIT_FAILURE;
+            return -1;
         }
     }
 
@@ -83,20 +90,19 @@ int insertar_ts(const EntradaTS entrada) {
         fprintf(stderr,
             "[ERROR] Fallo en asignar memoria para un lexema en %s\n",
             "insertar_ts(EntradaTS, int *)");
-        return EXIT_FAILURE;
+        return -1;
     }
 
-    // TODO: Copiar el tipo de token
+    TS[ocupado].tipo = entrada.tipo;
     strncpy(TS[ocupado].lexema, entrada.lexema, MAX_LEXEMA_SIZE - 1);
     TS[ocupado].lexema[MAX_LEXEMA_SIZE - 1] = '\0';
 
     ocupado++;
-
-    return EXIT_SUCCESS;
+    return ocupado - 1;
 }
 
 int redimensionar_ts(void) {
-    EntradaTS *ptr = realloc(TS, size * 2 * sizeof(EntradaTS));
+    ts_entrada_t *ptr = realloc(TS, size * 2 * sizeof(ts_entrada_t));
 
     if (ptr == NULL) {
         fprintf(stderr, "[ERROR] Fallo en redimensionar la TS en %s\n",
@@ -111,7 +117,7 @@ int redimensionar_ts(void) {
 }
 
 int destruir_ts(void) {
-    for (int i = 0; i < ocupado; i++)
+    for (size_t i = 0; i < ocupado; i++)
         free(TS[i].lexema);
     free(TS);
 
@@ -121,11 +127,10 @@ int destruir_ts(void) {
 int mostrar_ts(void) {
     printf("[INFO] Tabla de símbolos. Tamaño máximo: %ld\n", size);
 
-    for (int i = 0; i < ocupado; i++) {
-        EntradaTS e = TS[i];
+    for (size_t i = 0; i < ocupado; i++) {
+        ts_entrada_t e = TS[i];
 
         printf("\t%s\n", e.lexema);
     }
-
     return EXIT_SUCCESS;
 }
