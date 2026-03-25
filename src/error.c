@@ -11,11 +11,11 @@ static const char *MENSAJES[] = {
     // Errores léxicos
     "[ERROR] Comentario no cerrado en línea %zu\n",
     "[ERROR] Comentario no abierto en línea %zu\n",
-    "[ERROR] Tokens fuera del programa\n"
+    "[ERROR] Token no reconocido\n"
 };
 
 /* TODO: Comprobar que linea no sea NULL en los casos necesarios
- * Ir agregado cases para cada caso. Falta completar el caso en que recibe 
+ * Ir agregado cases para cada caso. Falta completar el caso en que recibe
  * una linea o los dos argumentos
  */
 int mostrar_error(
@@ -32,11 +32,19 @@ int mostrar_error(
     }
 
     switch (codigo) {
+        // recibe archivo
         case ERR_USO:
         case ERR_NO_ARCHIVO:
             fprintf(stderr, MENSAJES[codigo], archivo);
             break;
+        // recibe línea
+        case ERR_COM_NO_CERRADO:
+        case ERR_COM_NO_ABIERTO:
+            fprintf(stderr, MENSAJES[codigo], *linea);
+            break;
+        // no recibe parámetros
         case ERR_UN_ARCHIVO:
+        case ERR_TOKEN:
             fprintf(stderr, "%s", MENSAJES[codigo]);
             break;
         default:

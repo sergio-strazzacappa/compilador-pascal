@@ -33,7 +33,10 @@ int inicializar_ts(void) {
         e.tipo = TOKENS[i];
         e.lexema = (char *)palabras_reservadas[i];
 
-        if (insertar_ts(e)) {
+        if (insertar_ts(e) == -1) {
+            fprintf(stderr,
+                "[ERROR] Error al insertar entrada %s en la TS en inicializar_ts()\n",
+                e.lexema);
             return EXIT_FAILURE;
         }
     }
@@ -69,10 +72,11 @@ ts_entrada_t *buscar_ts_por_indice(const size_t indice) {
 }
 
 /*
- * Inserta una entrada en la TS y devuelve el indice correspondiente
+ * Inserta una entrada en la TS y devuelve el indice correspondiente o -1 en
+ * caso de error
  */
 int insertar_ts(const ts_entrada_t entrada) {
-    size_t indice = buscar_ts(entrada.lexema);
+    int indice = buscar_ts(entrada.lexema);
 
     if (indice != -1) {
         return indice;
@@ -80,6 +84,7 @@ int insertar_ts(const ts_entrada_t entrada) {
 
     if (ocupado >= size) {
         if (redimensionar_ts() == EXIT_FAILURE) {
+            fprintf(stderr, "[ERROR] No se pudo redimensionar la TS\n");
             return -1;
         }
     }
@@ -98,7 +103,8 @@ int insertar_ts(const ts_entrada_t entrada) {
     TS[ocupado].lexema[MAX_LEXEMA_SIZE - 1] = '\0';
 
     ocupado++;
-    return ocupado - 1;
+
+    return (ocupado - 1);
 }
 
 int redimensionar_ts(void) {

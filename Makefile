@@ -4,10 +4,10 @@ BUILD_DIR := ./build
 BIN_DIR := ./bin
 
 CC := gcc
-CFLAGS := -Wall -I$(INCLUDE_DIR)
+CFLAGS := -Wall -Wextra -I$(INCLUDE_DIR)
 
 TARGET_EXEC := $(BIN_DIR)/main
-OBJECTS := $(addprefix $(BUILD_DIR)/, main.o token.o) #lexico.o sintactico.o)
+OBJECTS := $(addprefix $(BUILD_DIR)/, main.o token.o ts.o error.o lexico.o) # sintactico.o)
 
 .PHONY: clean all
 

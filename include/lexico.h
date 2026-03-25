@@ -1,13 +1,16 @@
-#include "token.c"
+#ifndef LEXICO_H
+#define LEXICO_H
 
-#define MAX_PALABRAS_RESERVADAS (2048)
+#include <stdio.h>
+#include "token.h"
 
-void inicializar_lexico(char *archivo_fuente);
-Token obtener_siguiente_token();
-void espacios();
-void comentarios();
-Token numero();
-Token palabra();
-Token especial();
-Token buscar_lexema(char *lexema);
-void mostrar_palabras_reservadas();
+int inicializar_lexico(FILE *f);
+int obtener_siguiente_token(tok_t *token);
+int espacios(void);
+int comentarios(void);
+int digitos(tok_t *token);
+int palabra(tok_t *token);
+int especial(tok_t *token);
+int es_caracter_especial(char c);
+
+#endif /* LEXICO_H */

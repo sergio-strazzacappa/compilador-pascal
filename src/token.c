@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ts.h>
+#include "ts.h"
 #include "token.h"
 
 tipo_t const TOKENS[N_PALABRAS_RESERVADAS] = {

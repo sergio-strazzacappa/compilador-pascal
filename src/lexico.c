@@ -1,319 +1,307 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <ctype.h>
 #include <string.h>
 #include "lexico.h"
+#include "ts.h"
+#include "error.h"
 
-FILE *programa;
-int linea;
-char siguiente_caracter;
-Token palabras_reservadas[MAX_PALABRAS_RESERVADAS];
-int cant_palabras_reservadas;
+static FILE *programa_fuente;
+static size_t linea;
+static char siguiente_caracter;
 
-void inicializar_lexico(char *archivo_fuente) {
-    cant_palabras_reservadas = 20;
-    Token tokens[cant_palabras_reservadas];
-
-    tokens[0].etiqueta  = "PROGRAM\0";
-    tokens[1].etiqueta  = "FUNCTION\0";
-    tokens[2].etiqueta  = "PROCEDURE\0";
-    tokens[3].etiqueta  = "BEGIN\0";
-    tokens[4].etiqueta  = "END\0";
-    tokens[5].etiqueta  = "VAR\0";
-    tokens[6].etiqueta  = "WRITE\0";
-    tokens[7].etiqueta  = "READ\0";
-    tokens[8].etiqueta  = "IF\0";
-    tokens[9].etiqueta  = "THEN\0";
-    tokens[10].etiqueta = "ELSE\0";
-    tokens[11].etiqueta = "WHILE\0";
-    tokens[12].etiqueta = "DO\0";
-    tokens[13].etiqueta = "OR\0";
-    tokens[14].etiqueta = "AND\0";
-    tokens[15].etiqueta = "NOT\0";
-    tokens[16].etiqueta = "TRUE\0";
-    tokens[17].etiqueta = "FALSE\0";
-    tokens[18].etiqueta = "INTEGER\0";
-    tokens[19].etiqueta = "BOOLEAN\0";
-
-    for (int i = 0; i < cant_palabras_reservadas; i++) {
-        tokens[i].tipo = 3;
-        tokens[i].valor = 0;
-        tokens[i].lexema = tokens[i].etiqueta;
-        palabras_reservadas[i] = tokens[i];
+int inicializar_lexico(FILE *f) {
+    if (f == NULL) {
+        fprintf(stderr, "[ERROR] Archivo nulo\n");
+        return EXIT_FAILURE;
     }
 
-    programa = fopen(archivo_fuente, "r");
+    programa_fuente = f;
     linea = 1;
-    siguiente_caracter = ' ';
+    siguiente_caracter = fgetc(f);
 
-    if (programa == NULL) {
-        printf("Error al leer el archivo fuente.\n");
-        exit(1);
-    }
-    siguiente_caracter = fgetc(programa);
+    return EXIT_SUCCESS;
 }
 
-Token obtener_siguiente_token() {
-    Token token;
-    bool token_encontrado;
-    bool caracter_extranio;
+int obtener_siguiente_token(tok_t *token) {
+    char c = siguiente_caracter;
+    int token_encontrado = 0;
 
-    token.tipo = -1;
-    token.etiqueta = "\0";
-    token.valor = 0;
-    token.lexema = "\0";
-    token_encontrado = false;
-    caracter_extranio = true;
+    if (token == NULL) {
+        fprintf(stderr, "[ERROR] Token es nulo\n");
+        return EXIT_FAILURE;
+    }
 
-    while (siguiente_caracter == ' ' || siguiente_caracter == '\t' ||
-            siguiente_caracter == '\n' || siguiente_caracter == '{' ||
-            siguiente_caracter == '}') {
-        // Caracteres ignorados
-        if (siguiente_caracter == ' ' || siguiente_caracter == '\t' ||
-                siguiente_caracter == '\n') {
-            // Espacios y saltos de linea
-            espacios();
-        } else if (siguiente_caracter == '{') {
-            // Comentarios
-            comentarios();
-        } else if (siguiente_caracter == '}') {
-            printf("Error léxico: comentario no abierto en linea %d\n", linea);
-            exit(1);
+    while (!token_encontrado && c != EOF) {
+        if (isdigit(c)) {
+            digitos(token);
+            token_encontrado = 1;
+        } else if (isalpha(c) || c == '_') {
+            palabra(token);
+            token_encontrado = 1;
+        } else if (es_caracter_especial(c)) {
+            especial(token);
+            token_encontrado = 1;
+        } else {
+            // espacios, comentarios, saltos de línea
+            switch (c) {
+                case ' ':
+                case '\t':
+                case '\r':
+                case '\n':
+                    espacios();
+                    break;
+                case '{':
+                    comentarios();
+                    break;
+                case '}':
+                    mostrar_error(ERR_COM_NO_ABIERTO, NULL, &linea);
+                    siguiente_caracter = fgetc(programa_fuente);
+                    break;
+                default:
+                    printf("%c\n", c);
+                    mostrar_error(ERR_TOKEN, NULL, NULL);
+                    siguiente_caracter = fgetc(programa_fuente);
+                    break;
+            }
         }
+        c = siguiente_caracter;
     }
-    while (!token_encontrado && siguiente_caracter != EOF) {
-        if (!token_encontrado && siguiente_caracter >= '0' && 
-                siguiente_caracter <= '9') {
-            token = numero();
-            token_encontrado = true;
-            caracter_extranio = false;
-        } else if (!token_encontrado && 
-                (siguiente_caracter >= 'A' && siguiente_caracter <= 'Z') ||
-                (siguiente_caracter == '_') || 
-                (siguiente_caracter >= 'a' && siguiente_caracter <= 'z')) {
-            token = palabra();
-            token_encontrado = true;
-            caracter_extranio = false;
-        } else if (!token_encontrado &&
-                (siguiente_caracter == ':' || siguiente_caracter == '<' ||
-                 siguiente_caracter == '>' || siguiente_caracter == '=' ||
-                 siguiente_caracter == '+' || siguiente_caracter == '-' ||
-                 siguiente_caracter == '*' || siguiente_caracter == '/' ||
-                 siguiente_caracter == ';' || siguiente_caracter == '.' ||
-                 siguiente_caracter == ',' || siguiente_caracter == '(' ||
-                 siguiente_caracter == ')')) {
-            token = especial();
-            token_encontrado = true;
-            caracter_extranio = false;
-        }
-        if (caracter_extranio) {
-            printf("Error léxico: token no reconocido en linea %d\n", linea);
-            exit(1);
-        }
+
+    if (token == NULL) {
+        fprintf(stderr,
+            "[ERROR] Hubo un error léxico y no se envía nada al analizador sintactico\n");
+        return EXIT_FAILURE;
     }
-    printf("Token devuelto: %s, %s\n", token.etiqueta, token.lexema);
-    return token;
+
+    if (c == EOF) {
+        token->tipo = TOK_FIN;
+    }
+
+    return EXIT_SUCCESS;    
 }
 
-void espacios() {
-    while (siguiente_caracter == ' ' || siguiente_caracter == '\t' ||
-            siguiente_caracter == '\n') {
-        if (siguiente_caracter == '\n') {
+// Elimina los espacios en blanco y saltos de línea
+int espacios(void) {
+    char c = siguiente_caracter;
+
+    while (c == ' ' || c == '\t' || c == '\r' || c == '\n') {
+        if (c == '\n') {
             linea++;
         }
-        siguiente_caracter = fgetc(programa);
+        siguiente_caracter = fgetc(programa_fuente);
+        c = siguiente_caracter;
     }
+    return EXIT_SUCCESS;
 }
 
-void comentarios() {
-    while (siguiente_caracter != '}') {
-        siguiente_caracter = fgetc(programa);
-        if (siguiente_caracter == '\n') {
+// Elimina los comentarios
+int comentarios(void) {
+    char c = siguiente_caracter;
+    size_t linea_actual = linea;
+
+    while (c != '}' && c != EOF) {
+        siguiente_caracter = fgetc(programa_fuente);
+        c = siguiente_caracter;
+
+        if (c == '\n') {
             linea++;
         }
-        if (siguiente_caracter == EOF) {
-            printf("Error léxico: comentario no cerrado en linea %d\n", linea);
-            exit(1);
+
+        if (c == EOF) {
+            mostrar_error(ERR_COM_NO_CERRADO, NULL, &linea_actual); 
+            return EXIT_SUCCESS;
         }
     }
-    siguiente_caracter = fgetc(programa);
+    siguiente_caracter = fgetc(programa_fuente);
+    return EXIT_SUCCESS;
 }
 
-Token numero() {
-    Token token;
-    int valor = 0;
+// Lee digítos
+int digitos(tok_t *token) {
+    long valor = 0;
+    char c = siguiente_caracter;
 
     do {
-        valor = (10 * valor) + (siguiente_caracter - 48);
-        siguiente_caracter = fgetc(programa);
-    } while (siguiente_caracter >= '0' && siguiente_caracter <= '9');
+        valor = (10 * valor) + (c - '0');
+        siguiente_caracter = fgetc(programa_fuente);
+        c = siguiente_caracter;
+    } while (isdigit(c));
 
-    token.tipo = 2;
-    token.etiqueta = "Numero";
-    token.valor = valor;
-    token.lexema = "";
+    token->tipo = TOK_NUM;
+    token->linea = linea;
+    token->data_u.valor = valor;
 
-    return token;
+    return EXIT_SUCCESS;
 }
 
-Token palabra() {
-    char *palabra = malloc(1024 * sizeof(char));
-    char *palabra_mayuscula = malloc(1024 + sizeof(char));
-    int i;
-    Token token;
-    // Formar el lexema
-    i = 0;
+// Lee palabras
+int palabra(tok_t *token) {
+    char palabra[MAX_LEXEMA_SIZE];
+    char c = siguiente_caracter;
+    int i = 0;
+
+    // formar el lexema
     do {
-        palabra[i] = siguiente_caracter;
-        palabra_mayuscula[i] = toupper(siguiente_caracter);
-        siguiente_caracter = fgetc(programa);
-        i++;
-    } while ((siguiente_caracter >= '0' && siguiente_caracter <= '9') ||
-            (siguiente_caracter >= 'A' && siguiente_caracter <= 'Z') ||
-            (siguiente_caracter >= 'a' && siguiente_caracter <= 'z') ||
-            siguiente_caracter == '_'); 
+        palabra[i++] = toupper(siguiente_caracter);
+        siguiente_caracter = fgetc(programa_fuente);
+        c = siguiente_caracter;
+    } while (isalpha(c) || isdigit(c) || c == '_');
+
     palabra[i] = '\0';
-    palabra_mayuscula[i] = '\0';
-    // Buscar lexema en la tabla de símbolos
-    token = buscar_lexema(palabra_mayuscula);
 
-    if (token.tipo == -1) {
-        token.tipo = 3;
-        token.etiqueta = "Identificador";
-        token.valor = 0;
-        token.lexema = palabra;
-        palabras_reservadas[cant_palabras_reservadas] = token;
-        cant_palabras_reservadas++;
-    }   
-    return token;
+    printf("Palabra leída: %s\n", palabra);
+
+    // buscar el lexema en la tabla de símbolos
+    int indice = buscar_ts(palabra);
+
+    if (indice == -1) {
+        // lexema no encontrado
+        // almacenar lexema en la TS
+        ts_entrada_t entrada;
+        entrada.tipo = TOK_ID;
+        entrada.lexema = (char *)malloc(MAX_LEXEMA_SIZE * sizeof(char));
+        strncpy(entrada.lexema, palabra, MAX_LEXEMA_SIZE);
+        int indice = insertar_ts(entrada);
+
+        // crear el token
+        token->tipo = TOK_ID;
+        token->linea = linea;
+        token->data_u.ts_indice = indice;
+    } else {
+        // obtener la entrada de la TS
+        ts_entrada_t *e = buscar_ts_por_indice(indice);
+        token->tipo = e->tipo;
+        token->linea = linea;
+        token->data_u.ts_indice = indice;
+    }
+
+    return EXIT_SUCCESS;
 }
 
-Token especial() {
-    Token token;
+// Lee caracteres especiales
+int especial(tok_t *token) {
+    char c = siguiente_caracter;
+    token->linea = linea;
     
-    token.tipo = 4;
-    token.valor = 0;
-
-    if (siguiente_caracter == ':') {
-        siguiente_caracter = fgetc(programa);
-        if (siguiente_caracter == '=') {
-            // Asignación
-            token.etiqueta = "ASIGNACION\0";
-            token.lexema = "\0";
-            siguiente_caracter = fgetc(programa);
-        } else {
-            // Dos puntos
-            token.etiqueta = "DOS_PUNTOS\0";
-            token.lexema = "\0";
-        }
-    } else if (siguiente_caracter == '<') {
-        siguiente_caracter = fgetc(programa);
-        if (siguiente_caracter == '=') {
-            // Menor igual
-            token.etiqueta = "OPERADOR_RELACIONAL\0";
-            token.lexema = "MENOR_IGUAL\0";
-            siguiente_caracter = fgetc(programa);
-        } else if (siguiente_caracter == '>') {
-            // Distinto
-            token.etiqueta = "OPERADOR_RELACIONAL\0";
-            token.lexema = "DISTINTO\0";
-            siguiente_caracter = fgetc(programa);
-        } else {
-            // Menor
-            token.etiqueta = "OPERADOR_RELACIONAL\0";
-            token.lexema = "MENOR\0";
-        }
-    } else if (siguiente_caracter == '>') {
-        siguiente_caracter = fgetc(programa);
-        if (siguiente_caracter == '=') {
-            // Mayor igual
-            token.etiqueta = "OPERADOR_RELACIONAL\0";
-            token.lexema = "MAYOR_IGUAL\0";
-            siguiente_caracter = fgetc(programa);
-        } else {
-            // Mayor
-            token.etiqueta = "OPERADOR_RELACIONAL\0";
-            token.lexema = "MAYOR\0";
-        }
-    } else if (siguiente_caracter == '=') {
-        // Igual
-        siguiente_caracter = fgetc(programa);
-        token.etiqueta = "OPERADOR_RELACIONAL\0";
-        token.lexema = "IGUAL\0";
-    } else if (siguiente_caracter == '+') {
-        // Suma
-        siguiente_caracter = fgetc(programa);
-        token.etiqueta = "ALGEBRAICO_ADITIVO\0";
-        token.lexema = "SUMA\0";
-    } else if (siguiente_caracter == '-') {
-        // Resta
-        siguiente_caracter = fgetc(programa);
-        token.etiqueta = "ALGEBRAICO_ADITIVO\0";
-        token.lexema = "RESTA\0";
-    } else if (siguiente_caracter == '*') {
-        // Producto
-        siguiente_caracter = fgetc(programa);
-        token.etiqueta = "ALGEBRAICO_MULTIPLICATIVO\0";
-        token.lexema = "PRODUCTO\0";
-    } else if (siguiente_caracter == '/') {
-        // Cociente
-        siguiente_caracter = fgetc(programa);
-        token.etiqueta = "ALGEBRAICO_MULTIPLICATIVO\0";
-        token.lexema = "COCIENTE\0";
-    } else if (siguiente_caracter == ';') {
-        // Punto y coma
-        siguiente_caracter = fgetc(programa);
-        token.etiqueta = "PUNTO_Y_COMA\0";
-        token.lexema = "\0";
-    } else if (siguiente_caracter == '.') {
-        // Punto
-        siguiente_caracter = fgetc(programa);
-        token.etiqueta = "PUNTO\0";
-        token.lexema = "\0";
-    } else if (siguiente_caracter == ',') {
-        // Coma
-        siguiente_caracter = fgetc(programa);
-        token.etiqueta = "COMA\0";
-        token.lexema = "\0";
-    } else if (siguiente_caracter == '(') {
-        // Parentesis izquierdo
-        siguiente_caracter = fgetc(programa);
-        token.etiqueta = "PARENTESIS_IZQUIERDO\0";
-        token.lexema = "\0";
-    } else if (siguiente_caracter == ')') {
-        // Parentesis derecho
-        siguiente_caracter = fgetc(programa);
-        token.etiqueta = "PARENTESIS_DERECHO\0";
-        token.lexema = "\0";
+    switch (c) {
+        case ':':
+            siguiente_caracter = fgetc(programa_fuente);
+            c = siguiente_caracter;
+            if (c == '=') {
+                // Asignación
+                token->tipo = TOK_ASIG;
+                siguiente_caracter = fgetc(programa_fuente);
+            } else {
+                // Dos puntos
+                token->tipo = TOK_DOS_PUNTOS;
+            }
+            break;
+        case '<':
+            siguiente_caracter = fgetc(programa_fuente);
+            c = siguiente_caracter;
+            if (c == '=') {
+                // Menor igual
+                token->tipo = TOK_OP_REL;
+                token->data_u.subtipo = MENOR_IGUAL;
+                siguiente_caracter = fgetc(programa_fuente);
+            } else if (c == '>') {
+                // Distinto
+                token->tipo = TOK_OP_REL;
+                token->data_u.subtipo = DISTINTO;
+                siguiente_caracter = fgetc(programa_fuente);
+            } else {
+                // Menor
+                token->tipo = TOK_OP_REL;
+                token->data_u.subtipo = MENOR;
+            }
+            break;
+        case '>':
+            siguiente_caracter = fgetc(programa_fuente);
+            c = siguiente_caracter;
+            if (c == '=') {
+                // Mayor igual
+                token->tipo = TOK_OP_REL;
+                token->data_u.subtipo = MAYOR_IGUAL;
+                siguiente_caracter = fgetc(programa_fuente);
+            } else {
+                // Mayor
+                token->tipo = TOK_OP_REL;
+                token->data_u.subtipo = MAYOR;
+            }
+            break;
+        case '=':
+            // Igual
+            siguiente_caracter = fgetc(programa_fuente);
+            token->tipo = TOK_OP_REL;
+            token->data_u.subtipo = IGUAL;
+            break;
+        case '+':
+            // Suma
+            siguiente_caracter = fgetc(programa_fuente);
+            token->tipo = TOK_ALG_AD;
+            token->data_u.subtipo = SUMA;
+            break;
+        case '-':
+            // Resta
+            siguiente_caracter = fgetc(programa_fuente);
+            token->tipo = TOK_ALG_AD;
+            token->data_u.subtipo = RESTA;
+            break;
+        case '*':
+            // Producto
+            siguiente_caracter = fgetc(programa_fuente);
+            token->tipo = TOK_ALG_MUL;
+            token->data_u.subtipo = PRODUCTO;
+            break;
+        case '/':
+            // Cociente
+            siguiente_caracter = fgetc(programa_fuente);
+            token->tipo = TOK_ALG_MUL;
+            token->data_u.subtipo = COCIENTE;
+            break;
+        case ';':
+            // Punto y coma
+            siguiente_caracter = fgetc(programa_fuente);
+            token->tipo = TOK_PUNTO_Y_COMA;
+            break;
+        case '.':
+            // Punto
+            siguiente_caracter = fgetc(programa_fuente);
+            token->tipo = TOK_PUNTO;
+            break;
+        case ',':
+            // Coma
+            siguiente_caracter = fgetc(programa_fuente);
+            token->tipo = TOK_COMA;
+            break;
+        case '(':
+            // Parentesis izquierdo
+            siguiente_caracter = fgetc(programa_fuente);
+            token->tipo = TOK_PAR_IZQ;
+            break;
+        case ')':
+            // Parentesis derecho
+            siguiente_caracter = fgetc(programa_fuente);
+            token->tipo = TOK_PAR_DER;
+            break;
+        default:
+            fprintf(stderr, "[ERROR] Símbolo no reconocido en %s\n",
+                "especial()");
+            break;
     }
-    return token;
+
+    return EXIT_SUCCESS;
 }
 
-Token buscar_lexema(char *lexema) {
-    Token token;
-    token.tipo = -1;
+int es_caracter_especial(char c) {
+    const char simbolos[13] = {
+        ':', '<', '>', '=', '+', '-', '*', '/', ';', '.', ',', '(', ')'
+    };
 
-    for (int i = 0; i < cant_palabras_reservadas; i++) {
-        char *palabra = malloc(1024 * sizeof(char));
-        for (int j = 0; j < 1024; j++) {
-            palabra[j] = toupper(palabras_reservadas[i].lexema[j]);
-        }
-        if (!strcmp(palabras_reservadas[i].lexema, lexema) ||
-            !strcmp(palabra, lexema)) {
-            // Lexema encontrado
-            return palabras_reservadas[i];
-        }
+    for (int i = 0; i < 13; i++) {
+        if (c == simbolos[i])
+            return 1;
     }
-    // Lexema no encontrado
-    return token;
-}
-
-void mostrar_palabras_reservadas() {
-    printf("Palabras reservadas:\n");
-    printf("TOTAL= %d\n", cant_palabras_reservadas);
-    for (int i = 0; i < cant_palabras_reservadas; i++) {
-        printf("[ %s - ", palabras_reservadas[i].etiqueta);
-        printf("%s ]\n", palabras_reservadas[i].lexema);
-    }
+    return 0;
 }
