@@ -14,10 +14,6 @@ static const char *MENSAJES[] = {
     "[ERROR] Token no reconocido\n"
 };
 
-/* TODO: Comprobar que linea no sea NULL en los casos necesarios
- * Ir agregado cases para cada caso. Falta completar el caso en que recibe
- * una linea o los dos argumentos
- */
 int mostrar_error(
     const cod_t codigo,
     const char *const archivo,
@@ -40,6 +36,11 @@ int mostrar_error(
         // recibe línea
         case ERR_COM_NO_CERRADO:
         case ERR_COM_NO_ABIERTO:
+            if (linea == NULL) {
+                fprintf(stderr, "[ERROR] Línea no inicializada\n");
+                return EXIT_FAILURE;
+            }
+
             fprintf(stderr, MENSAJES[codigo], *linea);
             break;
         // no recibe parámetros

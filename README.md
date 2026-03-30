@@ -55,9 +55,13 @@ soportados.
 
 ```c
 typedef enum cod_e {
-    ERR_UN_ARCHIVO
-    ERR_USO
-    ERR_NO_ARCHIVO
+    ERR_UN_ARCHIVO,
+    ERR_USO,
+    ERR_NO_ARCHIVO,
+
+    ERR_COM_NO_CERRADO,
+    ERR_COM_NO_ABIERTO,
+    ERR_TOKEN
 } cod_t;
 
 int mostrar_error(
@@ -68,8 +72,16 @@ int mostrar_error(
 
 ### Tokens (token.h y token.c)
 
-#### Palabras reservadas
+#### Lista de tokens
 
+- IDENTIFICADOR
+    - Puntero a la TS
+- NUMERO
+    - Valor del entero
+- BOOLEANO
+    - Puntero a la TS
+- TIPO
+    - Puntero a la TS
 - PROGRAM
 - FUNCTION
 - PROCEDURE
@@ -83,78 +95,29 @@ int mostrar_error(
 - ELSE
 - WHILE
 - DO
+- ASIGNACION
 - OR
 - AND
+- OPERADOR_RELACIONAL
+    - MENOR_IGUAL
+    - MENOR
+    - MAYOR_IGUAL
+    - MAYOR
+    - IGUAL
+    - DISTINTO
+- ALGEBRAICO_ADITIVO
+    - SUMA
+    - RESTA
+- ALGEBRAICO_MULTIPLICATIVO
+    - PRODUCTO
+    - COCIENTE
 - NOT
-- TRUE
-- FALSE
-- INTEGER
-- TIPO
-
-#### Símbolos
-
-- ASIGNACION
-- DOS_PUNTOS
-- &lt;"OPERADOR_RELACIONAL", "MENOR_IGUAL"&gt;
-- &lt;"OPERADOR_RELACIONAL", "DISTINTO"&gt;
-- &lt;"OPERADOR_RELACIONAL", "MENOR"&gt;
-- &lt;"OPERADOR_RELACIONAL", "MAYOR_IGUAL"&gt;
-- &lt;"OPERADOR_RELACIONAL", "MAYOR"6gt;
-- &lt;"OPERADOR_RELACIONAL", "IGUAL"&gt;
-- &lt;"ALGEBRAICO_ADITIVO", "SUMA"&gt;
-- &lt;"ALGEBRAICO_ADITIVO", "RESTA"&gt;
-- &lt;"ALGEBRAICO_MULTIPLICATIVO", "PRODUCTO"&gt;
-- &lt;"ALGEBRAICO_MULTIPLICATIVO", "COCIENTE"&gt;
 - PUNTO_Y_COMA
 - PUNTO
 - COMA
+- DOS_PUNTOS
 - PARENTESIS_IZQUIERDO
 - PARENTESIS_DERECHO
-
-- Identificador
-    - Puntero a la TS
-- Numero
-    - Valor del entero
-- Booleano
-    - Valor del booleano
-- Tipo
-    - Entero
-    - Booleano
-- Program
-- Función
-- Procedimiento
-- Begin
-- End
-- Var
-- Write
-- Read
-- If
-- Then
-- Else
-- While
-- Do
-- Asignación
-- Or
-- And
-- Operador_relacional
-    - Menor_igual
-    - Menor
-    - Mayor_igual
-    - Igual
-    - Distinto
-- Algebraico_aditivo
-    - Suma
-    - Resta
-- Algebraico_multiplicativo
-    - Producto
-    - Cociente
-- Not
-- Punto_y_coma
-- Punto
-- Coma
-- Dos_puntos
-- Parentesis_izquierdo
-- Parentesis_derecho
 
 #### API
 

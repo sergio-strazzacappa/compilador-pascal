@@ -5,10 +5,10 @@
  * Archivo para manejar los tokens
  *
  * Los tokens pueden ser:
- *      1. Identificador (TOK_ID)
- *      2. Número (TOK_NUM)
- *      3. Booleano (TOK_BOOL)
- *      4. Tipo (TOK_T)
+ *      1. IDENTIFICADOR (TOK_ID)
+ *      2. NUMERO (TOK_NUM)
+ *      3. BOOLEANO (TOK_BOOL)
+ *      4. TIPO (TOK_T)
  *      5. PROGRAM (TOK_PROGRAM)
  *      6. FUNCTION (TOK_FUNCTION)
  *      7. PROCEDURE (TOK_PROCEDURE)
@@ -39,9 +39,9 @@
  * Cada token esta compuesto por:
  *      1. Tipo
  *      2. Linea
- *      2. Valor - Solo números
- *      3. Lexema - Algunos símbolos o palabras reservadas
- *      4. Puntero a la TS - Identificadores
+ *      3. Valor - Solo números
+ *      4. Lexema - Algunos símbolos o palabras reservadas
+ *      5. Puntero a la TS - Identificadores
  */
 
 #include <stddef.h>
