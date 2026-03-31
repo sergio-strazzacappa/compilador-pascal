@@ -48,6 +48,7 @@ int obtener_lexema(const tok_t *const tok, char *str) {
         case TOK_DOS_PUNTOS:    strcpy(str, "DOS_PUNTOS");                  break;
         case TOK_PAR_IZQ:       strcpy(str, "PARENTESIS_IZQUIERDO");        break;
         case TOK_PAR_DER:       strcpy(str, "PARENTESIS_DERECHO");          break;
+        case TOK_FIN:           strcpy(str, "EOF");                         break;
         default:
             fprintf(stderr,
                 "[ERROR] Token %d no tiene un tipo válido\n",
@@ -169,6 +170,8 @@ int obtener_info_token(const tok_t *const tok, char *str, const size_t len) {
                 snprintf(detalle_str, sizeof(detalle_str), "\n Lexema: %s", buffer);
             }
             break;
+        case TOK_FIN:
+            break;
         default:
             {
                 ts_entrada_t *e = buscar_ts_por_indice(tok->data_u.ts_indice);
@@ -186,5 +189,6 @@ int obtener_info_token(const tok_t *const tok, char *str, const size_t len) {
 
     snprintf(str, len, "[ TIPO: %s%s\n Línea: %d ]",
         tipo_str, detalle_str, tok->linea);
+
     return EXIT_SUCCESS;
 }

@@ -20,9 +20,12 @@
 #include <stddef.h>
 
 typedef enum cod_e {
+    // Errores genericos
     ERR_UN_ARCHIVO      = 0,
     ERR_USO             = 1,
     ERR_NO_ARCHIVO      = 2,
+
+    // Errores léxicos
     ERR_COM_NO_CERRADO  = 3,
     ERR_COM_NO_ABIERTO  = 4,
     ERR_TOKEN           = 5,
@@ -31,6 +34,7 @@ typedef enum cod_e {
 int mostrar_error(
     const cod_t codigo,
     const char *const archivo,
+    const char *const lexema,
     const size_t *const linea);
 
 #endif

@@ -35,6 +35,7 @@
  *      28. : (TOK_DOS_PUNTOS)
  *      29. ( (TOK_PAR_IZQ)
  *      30. ) (TOK_PAR_DER)
+ *      31. EOF (TOK_FIN)
  *
  * Cada token esta compuesto por:
  *      1. Tipo

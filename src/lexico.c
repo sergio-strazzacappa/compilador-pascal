@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include <assert.h>
 #include "lexico.h"
 #include "ts.h"
 #include "error.h"
@@ -11,10 +12,7 @@ static size_t linea;
 static char siguiente_caracter;
 
 int inicializar_lexico(FILE *f) {
-    if (f == NULL) {
-        fprintf(stderr, "[ERROR] Archivo nulo\n");
-        return EXIT_FAILURE;
-    }
+    assert(f != NULL);
 
     programa_fuente = f;
     linea = 1;
@@ -55,12 +53,11 @@ int obtener_siguiente_token(tok_t *token) {
                     comentarios();
                     break;
                 case '}':
-                    mostrar_error(ERR_COM_NO_ABIERTO, NULL, &linea);
+                    mostrar_error(ERR_COM_NO_ABIERTO, NULL, NULL, &linea);
                     siguiente_caracter = fgetc(programa_fuente);
                     break;
                 default:
-                    printf("%c\n", c);
-                    mostrar_error(ERR_TOKEN, NULL, NULL);
+                    mostrar_error(ERR_TOKEN, NULL, &c, &linea);
                     siguiente_caracter = fgetc(programa_fuente);
                     break;
             }
@@ -109,7 +106,7 @@ int comentarios(void) {
         }
 
         if (c == EOF) {
-            mostrar_error(ERR_COM_NO_CERRADO, NULL, &linea_actual); 
+            mostrar_error(ERR_COM_NO_CERRADO, NULL, NULL, &linea_actual); 
             return EXIT_SUCCESS;
         }
     }
@@ -149,8 +146,6 @@ int palabra(tok_t *token) {
     } while (isalpha(c) || isdigit(c) || c == '_');
 
     palabra[i] = '\0';
-
-    printf("Palabra leída: %s\n", palabra);
 
     // buscar el lexema en la tabla de símbolos
     int indice = buscar_ts(palabra);

@@ -55,10 +55,12 @@ soportados.
 
 ```c
 typedef enum cod_e {
+    // Errores genericos
     ERR_UN_ARCHIVO,
     ERR_USO,
     ERR_NO_ARCHIVO,
 
+    // Errores léxicos
     ERR_COM_NO_CERRADO,
     ERR_COM_NO_ABIERTO,
     ERR_TOKEN
@@ -67,6 +69,7 @@ typedef enum cod_e {
 int mostrar_error(
     const cod_t codigo,
     const char *const archivo,
+    const char *const lexema,
     const size_t *const linea);
 ```
 
@@ -118,6 +121,7 @@ int mostrar_error(
 - DOS_PUNTOS
 - PARENTESIS_IZQUIERDO
 - PARENTESIS_DERECHO
+- EOF
 
 #### API
 
@@ -127,7 +131,7 @@ typedef enum tipo_e {
     TOK_PROCEDURE, TOK_BEGIN, TOK_END, TOK_VAR, TOK_WRITE, TOK_READ,
     TOK_IF, TOK_THEN, TOK_ELSE, TOK_WHILE, TOK_DO, TOK_ASIG, TOK_OR,
     TOK_AND, TOK_OP_REL, TOK_ALG_AD, TOK_ALG_MUL, TOK_NOT, TOK_PUNTO_Y_COMA,
-    TOK_PUNTO, TOK_COMA, TOK_DOS_PUNTOS, TOK_PAR_IZQ, TOK_PAR_DER
+    TOK_PUNTO, TOK_COMA, TOK_DOS_PUNTOS, TOK_PAR_IZQ, TOK_PAR_DER, TOK_FIN
 } tipo_t;
 
 typedef enum subtipo_e {

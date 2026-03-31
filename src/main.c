@@ -13,8 +13,8 @@
 int main(int argc, char **argv) {
     if (argc != 2) {
         // Cantidad de archivos incorrecto
-        mostrar_error(ERR_UN_ARCHIVO, NULL, NULL);
-        mostrar_error(ERR_USO, argv[0], NULL);
+        mostrar_error(ERR_UN_ARCHIVO, NULL, NULL, NULL);
+        mostrar_error(ERR_USO, argv[0], NULL, NULL);
         return EXIT_FAILURE;
     }
 
@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
 
     FILE *f = fopen(archivo_fuente, "r");
     if (f == NULL) {
-        mostrar_error(ERR_NO_ARCHIVO, archivo_fuente, NULL);
+        mostrar_error(ERR_NO_ARCHIVO, archivo_fuente, NULL, NULL);
         return EXIT_FAILURE;
     }
 
@@ -43,6 +43,9 @@ int main(int argc, char **argv) {
 
     while (t->tipo != TOK_FIN) {
        obtener_siguiente_token(t);
+    /*   char info[1000];
+       obtener_info_token(t, info, 1000);
+       printf("%s\n", info);*/
     }
     //analizar(archivo_fuente);
 
