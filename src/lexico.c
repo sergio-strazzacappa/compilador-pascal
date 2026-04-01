@@ -3,6 +3,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <assert.h>
+#include <limits.h>
 #include "lexico.h"
 #include "ts.h"
 #include "error.h"
@@ -25,10 +26,7 @@ int obtener_siguiente_token(tok_t *token) {
     char c = siguiente_caracter;
     int token_encontrado = 0;
 
-    if (token == NULL) {
-        fprintf(stderr, "[ERROR] Token es nulo\n");
-        return EXIT_FAILURE;
-    }
+    assert(token != NULL);
 
     while (!token_encontrado && c != EOF) {
         if (isdigit(c)) {
@@ -65,14 +63,9 @@ int obtener_siguiente_token(tok_t *token) {
         c = siguiente_caracter;
     }
 
-    if (token == NULL) {
-        fprintf(stderr,
-            "[ERROR] Hubo un error léxico y no se envía nada al analizador sintactico\n");
-        return EXIT_FAILURE;
-    }
-
     if (c == EOF) {
         token->tipo = TOK_FIN;
+        token->linea = linea;
     }
 
     return EXIT_SUCCESS;    
@@ -116,18 +109,31 @@ int comentarios(void) {
 
 // Lee digítos
 int digitos(tok_t *token) {
-    long valor = 0;
+    __int128_t valor = 0;
     char c = siguiente_caracter;
+    int error = 0;
 
     do {
-        valor = (10 * valor) + (c - '0');
+        if (!error)
+            valor = (10 * valor) + (c - '0');
+
+        if (valor >= (__int128_t)LONG_MAX + 1 && !error) {
+            fprintf(stderr, "[ERROR] Número fuera de rango. Overflow\n");
+            error = 1;
+        }
+
         siguiente_caracter = fgetc(programa_fuente);
         c = siguiente_caracter;
     } while (isdigit(c));
 
     token->tipo = TOK_NUM;
     token->linea = linea;
-    token->data_u.valor = valor;
+
+    if (!error) {
+        token->data_u.valor = (unsigned long)valor;
+    } else {
+        token->data_u.valor = 0;
+    }
 
     return EXIT_SUCCESS;
 }
@@ -136,11 +142,21 @@ int digitos(tok_t *token) {
 int palabra(tok_t *token) {
     char palabra[MAX_LEXEMA_SIZE];
     char c = siguiente_caracter;
-    int i = 0;
+    size_t i = 0;
+    int error = 0;
 
     // formar el lexema
     do {
-        palabra[i++] = toupper(siguiente_caracter);
+        // checkeo de identificador demasiado largo, máximo 32 bits
+        if (i >= MAX_LEXEMA_SIZE && !error) {
+            fprintf(stderr,
+                "[ERROR] Identificado muy largo. Máximo permitido %d\n",
+                MAX_LEXEMA_SIZE);
+            error = 1;
+        }
+
+        if (!error)
+            palabra[i++] = toupper(siguiente_caracter);
         siguiente_caracter = fgetc(programa_fuente);
         c = siguiente_caracter;
     } while (isalpha(c) || isdigit(c) || c == '_');
@@ -157,15 +173,17 @@ int palabra(tok_t *token) {
         entrada.tipo = TOK_ID;
         entrada.lexema = (char *)malloc(MAX_LEXEMA_SIZE * sizeof(char));
         strncpy(entrada.lexema, palabra, MAX_LEXEMA_SIZE);
-        int indice = insertar_ts(entrada);
+        indice = insertar_ts(entrada);
 
         // crear el token
         token->tipo = TOK_ID;
         token->linea = linea;
         token->data_u.ts_indice = indice;
+
+        free(entrada.lexema);
     } else {
         // obtener la entrada de la TS
-        ts_entrada_t *e = buscar_ts_por_indice(indice);
+        const ts_entrada_t *e = buscar_ts_por_indice(indice);
         token->tipo = e->tipo;
         token->linea = linea;
         token->data_u.ts_indice = indice;

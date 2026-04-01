@@ -15,11 +15,12 @@ int main(int argc, char **argv) {
         // Cantidad de archivos incorrecto
         mostrar_error(ERR_UN_ARCHIVO, NULL, NULL, NULL);
         mostrar_error(ERR_USO, argv[0], NULL, NULL);
+
         return EXIT_FAILURE;
     }
 
     // Se lee el archivo fuente con éxito
-    char *archivo_fuente = argv[1];
+    const char *archivo_fuente = argv[1];
     printf("[INFO] Archivo leído: %s\n", archivo_fuente);
 
     // Se inicializa la tabla de símbolos
@@ -29,26 +30,19 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
-    mostrar_ts();
-
     FILE *f = fopen(archivo_fuente, "r");
     if (f == NULL) {
         mostrar_error(ERR_NO_ARCHIVO, archivo_fuente, NULL, NULL);
+
         return EXIT_FAILURE;
     }
 
     inicializar_lexico(f);
 
-    tok_t *t = (tok_t *)malloc(sizeof(tok_t));
-
-    while (t->tipo != TOK_FIN) {
-       obtener_siguiente_token(t);
-    /*   char info[1000];
-       obtener_info_token(t, info, 1000);
-       printf("%s\n", info);*/
-    }
     //analizar(archivo_fuente);
 
     destruir_ts();
+    fclose(f);
+
     return EXIT_SUCCESS;
 }

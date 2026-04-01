@@ -131,7 +131,7 @@ int destruir_ts(void) {
 }
 
 int mostrar_ts(void) {
-    printf("[INFO] Tabla de símbolos. Tamaño máximo: %ld\n", size);
+    printf("[INFO] Tabla de símbolos. Tamaño máximo: %zu\n", size);
 
     for (size_t i = 0; i < ocupado; i++) {
         ts_entrada_t e = TS[i];

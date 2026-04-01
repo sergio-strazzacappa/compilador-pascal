@@ -66,7 +66,7 @@ int obtener_numero(const tok_t *const tok, char *str, const size_t len) {
     str[0] = '\0';
 
     if (tok->tipo == TOK_NUM) {
-        snprintf(str, len, "%ld", tok->data_u.valor);
+        snprintf(str, len, "%lu", tok->data_u.valor);
         return EXIT_SUCCESS;
     }
 
@@ -174,7 +174,7 @@ int obtener_info_token(const tok_t *const tok, char *str, const size_t len) {
             break;
         default:
             {
-                ts_entrada_t *e = buscar_ts_por_indice(tok->data_u.ts_indice);
+                const ts_entrada_t *e = buscar_ts_por_indice(tok->data_u.ts_indice);
 
                 if (e == NULL) {
                     fprintf(stderr, "[ERROR] Token no encontrado\n");

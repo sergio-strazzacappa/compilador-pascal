@@ -23,11 +23,7 @@ int mostrar_error(
 
     size_t lon_mensajes = sizeof(MENSAJES) / sizeof(MENSAJES[0]);
 
-    if (codigo < 0 || codigo >= lon_mensajes) {
-        fprintf(stderr, "[ERROR] Código de error desconocido en %s\n",
-            "mostrar_error(CodigoError, char *)");
-        return EXIT_FAILURE;
-    }
+    assert(codigo >= 0 && codigo < lon_mensajes);
 
     switch (codigo) {
         // recibe archivo

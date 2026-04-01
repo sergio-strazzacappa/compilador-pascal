@@ -65,7 +65,7 @@ typedef struct token_s {
     int linea;
 
     union {
-        long valor;
+        unsigned long valor;
         subtipo_t subtipo;
         int ts_indice;
     } data_u;
