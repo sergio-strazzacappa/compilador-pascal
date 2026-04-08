@@ -5,7 +5,7 @@
 #include "error.h"
 #include "ts.h"
 #include "lexico.h"
-//#include "sintactico.h"
+#include "sintactico.h"
 
 /*
  * Uso: ./main archivo.pas
@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
 
     inicializar_lexico(f);
 
-    //analizar(archivo_fuente);
+    analizar(f);
 
     destruir_ts();
     fclose(f);

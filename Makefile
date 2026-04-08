@@ -7,7 +7,7 @@ CC := gcc
 CFLAGS := -Wall -Wextra -I$(INCLUDE_DIR) -g
 
 TARGET_EXEC := $(BIN_DIR)/main
-OBJECTS := $(addprefix $(BUILD_DIR)/, main.o token.o ts.o error.o lexico.o) # sintactico.o)
+OBJECTS := $(addprefix $(BUILD_DIR)/, main.o token.o ts.o error.o lexico.o sintactico.o)
 
 .PHONY: clean check all
 

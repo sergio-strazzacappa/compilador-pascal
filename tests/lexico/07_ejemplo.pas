@@ -1,4 +1,4 @@
-{Ejemplo 5}
+{Ejemplo 7}
 program p;
 var a: integer;
 begin
