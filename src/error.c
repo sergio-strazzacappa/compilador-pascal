@@ -12,7 +12,11 @@ static const char *MENSAJES[] = {
     // Errores léxicos
     "[ERROR] Comentario no cerrado en línea %zu\n",
     "[ERROR] Comentario no abierto en línea %zu\n",
-    "[ERROR] Token %c no reconocido en línea %zu\n"
+    "[ERROR] Token %c no reconocido en línea %zu\n",
+
+    // Errores sintácticos
+    "[ERROR] Token fuera del programa principal en línea %zu\n",
+    "[ERROR] %s\n"
 };
 
 int mostrar_error(
@@ -37,6 +41,7 @@ int mostrar_error(
         // recibe línea
         case ERR_COM_NO_CERRADO:
         case ERR_COM_NO_ABIERTO:
+        case ERR_TOK_SOBRANTE:
             assert(linea != NULL);
 
             fprintf(stderr, MENSAJES[codigo], *linea);
@@ -52,6 +57,11 @@ int mostrar_error(
 
         // no recibe parámetros
         case ERR_UN_ARCHIVO:
+            fprintf(stderr, "%s", MENSAJES[codigo]);
+            break;
+
+        // recibe un mensaje
+        case ERR_MATCH:
             fprintf(stderr, "%s", MENSAJES[codigo]);
             break;
         default:

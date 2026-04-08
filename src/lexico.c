@@ -68,7 +68,7 @@ int obtener_siguiente_token(tok_t *token) {
         token->linea = linea;
     }
 
-    return EXIT_SUCCESS;    
+    return EXIT_SUCCESS;
 }
 
 // Elimina los espacios en blanco y saltos de línea
@@ -99,7 +99,7 @@ int comentarios(void) {
         }
 
         if (c == EOF) {
-            mostrar_error(ERR_COM_NO_CERRADO, NULL, NULL, &linea_actual); 
+            mostrar_error(ERR_COM_NO_CERRADO, NULL, NULL, &linea_actual);
             return EXIT_SUCCESS;
         }
     }
@@ -196,7 +196,7 @@ int palabra(tok_t *token) {
 int especial(tok_t *token) {
     char c = siguiente_caracter;
     token->linea = linea;
-    
+
     switch (c) {
         case ':':
             siguiente_caracter = fgetc(programa_fuente);

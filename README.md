@@ -15,15 +15,18 @@ soportados.
 ├── include/
 │   ├── error.h
 │   ├── lexico.h
+│   ├── sintactico.h
 │   ├── token.h
 │   ├── ts.h
 ├── src/
 │   ├── error.c
 │   ├── lexico.c
+│   ├── sintactico.h
 │   ├── token.c
 │   ├── ts.c
 ├── tests/
 ├── Dockerfile
+├── Gramatica.md
 ├── Makefile
 └── README.md
 ```

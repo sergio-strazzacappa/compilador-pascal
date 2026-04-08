@@ -187,7 +187,7 @@ int obtener_info_token(const tok_t *const tok, char *str, const size_t len) {
             }
     }
 
-    snprintf(str, len, "[ TIPO: %s%s\n Línea: %d ]",
+    snprintf(str, len, "[ TIPO: %s%s\n Línea: %zu ]",
         tipo_str, detalle_str, tok->linea);
 
     return EXIT_SUCCESS;

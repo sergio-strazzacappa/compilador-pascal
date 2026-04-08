@@ -62,7 +62,7 @@ typedef enum subtipo_e {
 
 typedef struct token_s {
     tipo_t tipo;
-    int linea;
+    size_t linea;
 
     union {
         unsigned long valor;

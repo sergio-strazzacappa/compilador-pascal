@@ -1,10 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include "token.h"
 #include "error.h"
 #include "ts.h"
-#include "lexico.h"
 #include "sintactico.h"
 
 /*
@@ -36,8 +33,6 @@ int main(int argc, char **argv) {
 
         return EXIT_FAILURE;
     }
-
-    inicializar_lexico(f);
 
     analizar(f);
 

@@ -15,6 +15,10 @@
  * 3. Comentario no cerrado
  * 4. Comentario no abierto
  * 5. Token no reconocido
+ *
+ * Errores Sintácticos
+ * 6. Token fuera del programa
+ * 7. Error match
  */
 
 #include <stddef.h>
@@ -29,6 +33,10 @@ typedef enum cod_e {
     ERR_COM_NO_CERRADO  = 3,
     ERR_COM_NO_ABIERTO  = 4,
     ERR_TOKEN           = 5,
+
+    // Errores sintácticos
+    ERR_TOK_SOBRANTE    = 6,
+    ERR_MATCH           = 7
 } cod_t;
 
 int mostrar_error(
