@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 #include "sintactico.h"
 #include "lexico.h"
 #include "error.h"
+#include "ts.h"
 
 static tok_t preanalisis;
 
@@ -17,38 +19,39 @@ int analizar(FILE *archivo_fuente) {
 }
 
 int programa(void) {
+    tipo_t t = preanalisis.tipo;
+
     match(TOK_PROGRAM);
     match(TOK_ID);
     match(TOK_PUNTO_Y_COMA);
 
-    if (preanalisis.tipo == TOK_VAR) {
+    if (t == TOK_VAR) {
         match(TOK_VAR);
         lista_variables();
     }
 
-    if (preanalisis.tipo == TOK_FUNCTION || preanalisis.tipo == TOK_PROCEDURE) {
+    if (t == TOK_FUNCTION || t == TOK_PROCEDURE) {
         declaracion_subprogramas();
     }
 
     match(TOK_BEGIN);
 
-    if (preanalisis.tipo == TOK_ID          ||
-        preanalisis.tipo == TOK_IF          ||
-        preanalisis.tipo == TOK_WHILE       ||
-        preanalisis.tipo == TOK_WRITE       || 
-        preanalisis.tipo == TOK_READ        ||
-        preanalisis.tipo == TOK_PUNTO_Y_COMA) {
-            lista_sentencias();
+    if (t == TOK_ID || t == TOK_IF || t == TOK_WHILE || t == TOK_WRITE ||
+        t == TOK_READ || t == TOK_PUNTO_Y_COMA) {
+        lista_sentencias();
     }
 
     match(TOK_END);
     match(TOK_PUNTO);
 
     // ERROR
-    if (preanalisis.tipo == TOK_FIN) {
+    if (t == TOK_FIN) {
         // Tokens fuera del programa principal
         mostrar_error(ERR_TOK_SOBRANTE, NULL, NULL, &preanalisis.linea);
+
+        exit(EXIT_FAILURE);
     }
+
     return EXIT_SUCCESS;
 }
 
@@ -60,293 +63,305 @@ int lista_variables(void) {
 }
 
 int lista_variables_1(void) {
-    if (preanalisis.tipo == TOK_COMA) {
+    tipo_t t = preanalisis.tipo;
+
+    if (t == TOK_COMA) {
         match(TOK_COMA);
         lista_variables();
-    } else if (preanalisis.tipo == TOK_DOS_PUNTOS) {
+    } else if (t == TOK_DOS_PUNTOS) {
         match(TOK_DOS_PUNTOS);
         tipo();
         match(TOK_PUNTO_Y_COMA);
         lista_variables_2();
     } else {
         // ERROR
-        char *str = "Error en la declaración de variables. Se espera \",\" ó \":\"";
-        mostrar_error(7, NULL, str, NULL);
-        // TODO:
-        // Obtener el léxema o el número para mostrar un mensaje de error mas 
-        // descriptivo
-
+        char *str = "Error en la declaración de variables."
+                    "Se espera \",\" ó \":\"";
+        mostrar_error(ERR_MATCH, NULL, str, NULL);
+        
+        exit(EXIT_FAILURE);
     }
-
     return EXIT_SUCCESS;
 }
 
 int lista_variables_2(void) {
-    if (preanalisis.tipo == TOK_ID) {
+    tipo_t t = preanalisis.tipo;
+
+    if (t == TOK_ID) {
         lista_variables();
     }
 
     return EXIT_SUCCESS;
 }
 
-int tipo() {
-    if (strcmp(preanalisis.lexema, "INTEGER") == 0) {
-        match_palabra("INTEGER");
-        match("TIPO");
-    } else if (strcmp(preanalisis.lexema, "BOOLEAN") == 0) {
-        match_palabra("BOOLEAN");
-        match("TIPO");
+int tipo(void) {
+    tipo_t t = preanalisis.tipo;
+    const ts_entrada_t *e = buscar_ts_por_indice(preanalisis.data_u.ts_indice);
+
+    if (t == TOK_T) {
+        if (strcmp(e->lexema, "INTEGER") == 0) {
+            match_palabra("INTEGER");
+            match(TOK_T);
+        } else if (strcmp(e->lexema, "BOOLEAN") == 0) {
+            match_palabra("BOOLEAN");
+            match(TOK_T);
+        } else {
+            assert(0);
+        } 
     } else {
         // ERROR
-        printf("Error sintáctico: error en declaración de ");
-        printf("variables. Se espera \"INTEGER\" ó \"BOOLEAN\"");
+        char *str = "Error en la declaración de variables. Se espera " 
+                    "\"INTEGER\" ó \"BOOLEAN\"";
 
-        if (strcmp(preanalisis.etiqueta, "NUMERO") == 0) {
-            printf(" y se encontró \"%ld\"", preanalisis.valor);
-        } else if (strcmp(preanalisis.lexema, "") != 0) {
-            printf(" y se encontró \"%s\"", preanalisis.lexema);
-        }
-        printf("\n");
-        exit(1);
+        mostrar_error(ERR_MATCH, NULL, str, NULL);
+
+        exit(EXIT_FAILURE);
     }
-    return 0;
+
+    return EXIT_SUCCESS;
 }
 
-int declaracion_subprogramas() {
-    if (strcmp(preanalisis.etiqueta, "FUNCTION") == 0) {
+int declaracion_subprogramas(void) {
+    tipo_t t = preanalisis.tipo;
+
+    if (t == TOK_FUNCTION) {
         funcion();
         declaracion_subprogramas_1();
-    } else if (strcmp(preanalisis.etiqueta, "PROCEDURE") == 0) {
+    } else if (t == TOK_PROCEDURE) {
         procedimiento();
         declaracion_subprogramas_1();
     } else {
         // ERROR
-        printf("Error sintáctico: error en definción de ");
-        printf("función o procedimiento. ");
-        printf("Se espera \"FUNCTION\" ó \"PROCEDURE\"");
+        char *str = "Error sintáctico: error en definción de "
+                    "función o procedimiento. "
+                    "Se espera \"FUNCTION\" ó \"PROCEDURE\"";
 
-        if (strcmp(preanalisis.etiqueta, "NUMERO") == 0) {
-            printf(" y se encontró \"%ld\"", preanalisis.valor);
-        } else if (strcmp(preanalisis.lexema, "") != 0){
-            printf(" y se encontró \"%s\"", preanalisis.lexema);
-        }
-        printf("\n");
-        exit(1);
+        mostrar_error(ERR_MATCH, NULL, str, NULL);
+
+        exit(EXIT_FAILURE);
     }
-    return 0;
+
+    return EXIT_SUCCESS;
 }
 
-int declaracion_subprogramas_1() {
-    if (strcmp(preanalisis.etiqueta, "FUNCTION") == 0
-        || strcmp(preanalisis.etiqueta, "PROCEDURE") == 0) {
-        
+int declaracion_subprogramas_1(void) {
+    tipo_t t = preanalisis.tipo;
+
+    if (t == TOK_FUNCTION || t == TOK_PROCEDURE) {
         declaracion_subprogramas();
     }
-    return 0;
+
+    return EXIT_SUCCESS;
 }
 
-int funcion() {
-    match("FUNCTION");
-    match("IDENTIFICADOR");
+int funcion(void) {
+    tipo_t t = preanalisis.tipo;
 
-    if (strcmp(preanalisis.etiqueta, "PARENTESIS_IZQUIERDO") == 0) {
-        match("PARENTESIS_IZQUIERDO");
+    match(TOK_FUNCTION);
+    match(TOK_ID);
+
+    if (t == TOK_PAR_IZQ) {
+        match(TOK_PAR_IZQ);
         parametros_formales();
-        match("PARENTESIS_DERECHO");
+        match(TOK_PAR_DER);
     }
 
-    match("DOS_PUNTOS");
+    match(TOK_DOS_PUNTOS);
     tipo();
-    match("PUNTO_Y_COMA");
+    match(TOK_PUNTO_Y_COMA);
 
-    if (strcmp(preanalisis.etiqueta, "VAR") == 0) {
-        match("VAR");
+    if (t == TOK_VAR) {
+        match(TOK_VAR);
         lista_variables();
     }
 
-    if (strcmp(preanalisis.etiqueta, "FUNCTION") == 0
-        || strcmp(preanalisis.etiqueta, "PROCEDURE") == 0) {
+    if (t == TOK_FUNCTION || t == TOK_PROCEDURE) {
         declaracion_subprogramas();
     }
 
-    match("BEGIN");
+    match(TOK_BEGIN);
 
-    if (strcmp(preanalisis.etiqueta, "IDENTIFICADOR") == 0
-        || strcmp(preanalisis.etiqueta, "IF") == 0
-        || strcmp(preanalisis.etiqueta, "WHILE") == 0
-        || strcmp(preanalisis.etiqueta, "WRITE") == 0
-        || strcmp(preanalisis.etiqueta, "READ") == 0
-        || strcmp(preanalisis.etiqueta, "PUNTO_Y_COMA") == 0) {
-
+    if (t == TOK_ID || t == TOK_IF || t == TOK_WHILE || t == TOK_WRITE ||
+        t == TOK_READ || t == TOK_PUNTO_Y_COMA) {
         lista_sentencias();
     }
 
-    match("END");
-    match("PUNTO_Y_COMA");
-    return 0;
+    match(TOK_END);
+    match(TOK_PUNTO_Y_COMA);
+
+    return EXIT_SUCCESS;
 }
 
-int procedimiento() {
-    match("PROCEDURE");
-    match("IDENTIFICADOR");
+int procedimiento(void) {
+    tipo_t t = preanalisis.tipo;
 
-    if (strcmp(preanalisis.etiqueta, "PARENTESIS_IZQUIERDO") == 0) {
-        match("PARENTESIS_IZQUIERDO");
+    match(TOK_PROCEDURE);
+    match(TOK_ID);
+
+    if (t == TOK_PAR_IZQ) {
+        match(TOK_PAR_IZQ);
         parametros_formales();
-        match("PARENTESIS_DERECHO");
+        match(TOK_PAR_DER);
     }
 
-    match("PUNTO_Y_COMA");
+    match(TOK_PUNTO_Y_COMA);
 
-    if (strcmp(preanalisis.etiqueta, "VAR") == 0) {
-        match("VAR");
+    if (t == TOK_VAR) {
+        match(TOK_VAR);
         lista_variables();
     }
 
-    if (strcmp(preanalisis.etiqueta, "FUNCTION") == 0
-        || strcmp(preanalisis.etiqueta, "PROCEDURE") == 0) {
-
+    if (t == TOK_FUNCTION || t == TOK_PROCEDURE) {
         declaracion_subprogramas();
     }
 
-    match("BEGIN");
+    match(TOK_BEGIN);
 
-    if (strcmp(preanalisis.etiqueta, "IDENTIFICADOR") == 0
-        || strcmp(preanalisis.etiqueta, "IF") == 0
-        || strcmp(preanalisis.etiqueta, "WHILE") == 0
-        || strcmp(preanalisis.etiqueta, "WRITE") == 0
-        || strcmp(preanalisis.etiqueta, "READ") == 0
-        || strcmp(preanalisis.etiqueta, "PUNTO_Y_COMA") == 0) {
-
+    if (t == TOK_ID || t == TOK_IF || t == TOK_WHILE || t == TOK_WRITE ||
+        t == TOK_READ || t == TOK_PUNTO_Y_COMA) {
         lista_sentencias();
     }
 
-    match("END");
-    match("PUNTO_Y_COMA");
+    match(TOK_END);
+    match(TOK_PUNTO_Y_COMA);
 
-    return 0;
+    return EXIT_SUCCESS;
 }
 
-int parametros_formales() {
-    match("IDENTIFICADOR");
+int parametros_formales(void) {
+    match(TOK_ID);
     parametros_formales_1();
-    return 0;
+
+    return EXIT_SUCCESS;
 }
 
-int parametros_formales_1() {
-    if (strcmp(preanalisis.etiqueta, "COMA") == 0) {
-        match("COMA");
+int parametros_formales_1(void) {
+    tipo_t t = preanalisis.tipo;
+
+    if (t == TOK_COMA) {
+        match(TOK_COMA);
         parametros_formales();
-    } else if(strcmp(preanalisis.etiqueta, "DOS_PUNTOS") == 0) {
-        match("DOS_PUNTOS");
+    } else if (t == TOK_DOS_PUNTOS) {
+        match(TOK_DOS_PUNTOS);
         tipo();
         parametros_formales_2();
     } else {
         // ERROR
-        printf("Error sintáctico: error en declaración de ");
-        printf("variables. Se espera \",\" ó \":\"");
+        char *str = "Error sintáctico: error en declaración de "
+                    "variables. Se espera \",\" ó \":\"";
 
-        if (strcmp(preanalisis.etiqueta, "NUMERO") == 0) {
-            printf(" y se encontró \"%ld\"", preanalisis.valor);
-        } else if (strcmp(preanalisis.lexema, "") != 0){
-            printf(" y se encontró \"%s\"", preanalisis.lexema);
-        }
-        printf("\n");
-        exit(1);
+        mostrar_error(ERR_MATCH, NULL, str, NULL);
+
+        exit(EXIT_FAILURE);
     }
-    return 0;
+
+    return EXIT_SUCCESS;
 }
 
-int parametros_formales_2() {
-    if (strcmp(preanalisis.etiqueta, "PUNTO_Y_COMA") == 0) {
-        match("PUNTO_Y_COMA");
+int parametros_formales_2(void) {
+    tipo_t t = preanalisis.tipo;
+
+    if (t == TOK_PUNTO_Y_COMA) {
+        match(TOK_PUNTO_Y_COMA);
         parametros_formales();
     }
-    return 0;
+
+    return EXIT_SUCCESS;
 }
 
-int lista_sentencias() {
+int lista_sentencias(void) {
     sentencia();
     lista_sentencias_1();
-    return 0;
+
+    return EXIT_SUCCESS;
 }
 
-int lista_sentencias_1() {
-    if (strcmp(preanalisis.etiqueta, "PUNTO_Y_COMA") == 0) {
-        match("PUNTO_Y_COMA");
+int lista_sentencias_1(void) {
+    tipo_t t = preanalisis.tipo;
+
+    if (t == TOK_PUNTO_Y_COMA) {
+        match(TOK_PUNTO_Y_COMA);
         lista_sentencias();
     }
-    return 0;
+
+    return EXIT_SUCCESS;
 }
 
 int sentencia() {
-    if (strcmp(preanalisis.etiqueta, "PUNTO_Y_COMA") == 0) {
-        match("PUNTO_Y_COMA");
+    tipo_t t = preanalisis.tipo;
+
+    if (t == TOK_PUNTO_Y_COMA) {
+        match(TOK_PUNTO_Y_COMA);
         sentencia();
-    } else if (strcmp(preanalisis.etiqueta, "IDENTIFICADOR") == 0) {
+    } else if (t == TOK_ID) {
         // Asignación o llamada a subprograma
-        match("IDENTIFICADOR");
+        match(TOK_ID);
         sentencia_1();
-    } else if (strcmp(preanalisis.etiqueta, "IF") == 0) {
+    } else if (t == TOK_IF) {
         alternativa();
-    } else if (strcmp(preanalisis.etiqueta, "WHILE") == 0) {
+    } else if (t == TOK_WHILE) {
         repetitiva();
-    } else if (strcmp(preanalisis.etiqueta, "WRITE") == 0) {
+    } else if (t == TOK_WRITE) {
         escritura();
-    } else if (strcmp(preanalisis.etiqueta, "READ") == 0) {
+    } else if (t == TOK_READ) {
         lectura();
     }
-    return 0;
+
+    return EXIT_SUCCESS;
 }
 
-int sentencia_1() {
-    if (strcmp(preanalisis.etiqueta, "ASIGNACION") == 0) {
+int sentencia_1(void) {
+    tipo_t t = preanalisis.tipo;
+
+    if (t == TOK_ASIG) {
         asignacion();
-    } else if (strcmp(preanalisis.etiqueta, "PARENTESIS_IZQUIERDO") == 0) {
-        match("PARENTESIS_IZQUIERDO");
+    } else if (t == TOK_PAR_IZQ) {
+        match(TOK_PAR_IZQ);
         llamada_subprograma();
-    } else if (strcmp(preanalisis.etiqueta, "PUNTO_Y_COMA") == 0) {
-        match("PUNTO_Y_COMA");
+    } else if (t == TOK_PUNTO_Y_COMA) {
+        match(TOK_PUNTO_Y_COMA);
     }
-    return 0;
+
+    return EXIT_SUCCESS;
 }
 
 int asignacion() {
-    match("ASIGNACION");
+    match(TOK_ASIG);
     expresion();
-    return 0;
+
+    return EXIT_SUCCESS;
 }
 
-int alternativa() {
-    match("IF");
+int alternativa(void) {
+    match(TOK_IF);
     expresion();
-    match("THEN");
+    match(TOK_THEN);
     sentencia_compuesta();
     alternativa_1();
-    return 0;
+
+    return EXIT_SUCCESS;
 }
 
-int alternativa_1() {
-    if (strcmp(preanalisis.etiqueta, "ELSE") == 0) {
-        match("ELSE");
+int alternativa_1(void) {
+    tipo_t t = preanalisis.tipo;
+
+    if (t == TOK_ELSE) {
+        match(TOK_ELSE);
         sentencia_compuesta();
-        match("PUNTO_Y_COMA");
-    } else if (strcmp(preanalisis.etiqueta, "PUNTO_Y_COMA") == 0) {
-        match("PUNTO_Y_COMA");
+        match(TOK_PUNTO_Y_COMA);
+    } else if (t == TOK_PUNTO_Y_COMA) {
+        match(TOK_PUNTO_Y_COMA);
     } else {
         // ERROR
-        printf("Error sintáctico: error en estructura ");
-        printf("alternativa. Se espera \"ELSE\" ó \";\"");
+        char *str = "Error sintáctico: error en estructura "
+                    "alternativa. Se espera \"ELSE\" ó \";\"";
 
-        if (strcmp(preanalisis.etiqueta, "NUMERO") == 0) {
-            printf(" y se encontró \"%ld\"", preanalisis.valor);
-        } else if (strcmp(preanalisis.lexema, "") != 0){
-            printf(" y se encontró \"%s\"", preanalisis.lexema);
-        }
-        printf("\n");
-        exit(1);
+        mostrar_error(ERR_MATCH, NULL, str, NULL);
+
+        exit(EXIT_FAILURE);
     }
-    return 0;
+
+    return EXIT_SUCCESS;
 }
 
 int repetitiva() {

@@ -186,3 +186,7 @@ int mostrar_ts(void);
 
 - Revisar los malloc y agregar los correspondiente free
 - Ejemplo046
+- Ver si es necesario agregar el lexema a los tokens para mejor mensajes de
+    error
+- Actualmente el analizador finaliza cuando encuentra un error, ver formas de
+    recuperacion 
