@@ -364,280 +364,293 @@ int alternativa_1(void) {
     return EXIT_SUCCESS;
 }
 
-int repetitiva() {
-    match("WHILE");
+int repetitiva(void) {
+    match(TOK_WHILE);
     expresion();
-    match("DO");
+    match(TOK_DO);
     sentencia_compuesta();
-    return 0;
+
+    return EXIT_SUCCESS;
 }
 
-int sentencia_compuesta() {
-    if (strcmp(preanalisis.etiqueta, "IDENTIFICADOR") == 0
-        || strcmp(preanalisis.etiqueta, "IF") == 0
-        || strcmp(preanalisis.etiqueta, "WHILE") == 0
-        || strcmp(preanalisis.etiqueta, "WRITE") == 0
-        || strcmp(preanalisis.etiqueta, "READ") == 0) {
+int sentencia_compuesta(void) {
+    tipo_t t = preanalisis.tipo;
 
+    if (t == TOK_ID || t == TOK_IF || t == TOK_WHILE || t == TOK_WRITE ||
+        t == TOK_READ) {
         sentencia();
-    } else if (strcmp(preanalisis.etiqueta, "BEGIN") == 0) {
-        match("BEGIN");
+    } else if (t == TOK_BEGIN) {
+        match(TOK_BEGIN);
         sentencia();
-        match("PUNTO_Y_COMA");
+        match(TOK_PUNTO_Y_COMA);
         lista_sentencias();
-        match("END");
+        match(TOK_END);
     } else {
         // ERROR
-        printf("Error sintáctico: error en sentencia. ");
-        printf("Se espera \"IDENTIFICADOR\", \"IF\", ");
-        printf("\"WHILE\", \"WRITE\", \"READ\" ó \"BEGIN\"");
+        char *str = "Error sintáctico: error en sentencia. "
+                    "Se espera \"IDENTIFICADOR\", \"IF\", "
+                    "\"WHILE\", \"WRITE\", \"READ\" ó \"BEGIN\"";
 
-        if (strcmp(preanalisis.etiqueta, "NUMERO") == 0) {
-            printf(" y se encontró \"%ld\"", preanalisis.valor);
-        } else if (strcmp(preanalisis.lexema, "") != 0){
-            printf(" y se encontró \"%s\"", preanalisis.lexema);
-        }
-        printf("\n");
-        exit(1);
+        mostrar_error(ERR_MATCH, NULL, str, NULL);
 
+        exit(EXIT_FAILURE);
     }
-    return 0;
+    return EXIT_SUCCESS;
 }
 
-int escritura() {
-    match("WRITE");
-    match("PARENTESIS_IZQUIERDO");
+int escritura(void) {
+    match(TOK_WRITE);
+    match(TOK_PAR_IZQ);
     expresion();
-    match("PARENTESIS_DERECHO");
-    return 0;
+    match(TOK_PAR_DER);
+
+    return EXIT_SUCCESS;
 }
 
-int lectura() {
-    match("READ");
-    match("PARENTESIS_IZQUIERDO");
-    match("IDENTIFICADOR");
-    match("PARENTESIS_DERECHO");
-    return 0;
+int lectura(void) {
+    match(TOK_READ);
+    match(TOK_PAR_IZQ);
+    match(TOK_ID);
+    match(TOK_PAR_DER);
+
+    return EXIT_SUCCESS;
 }
 
-int expresion() {
+int expresion(void) {
     termino_booleano();
     expresion_1();
-    return 0;
+
+    return EXIT_SUCCESS;
 }
 
-int expresion_1() {
-    if (strcmp(preanalisis.etiqueta, "OR") == 0) {
-        match("OR");
+int expresion_1(void) {
+    tipo_t t = preanalisis.tipo;
+
+    if (t == TOK_OR) {
+        match(TOK_OR);
         termino_booleano();
         expresion_1();
     }
-    return 0;
+
+    return EXIT_SUCCESS;
 }
 
-int termino_booleano() {
+int termino_booleano(void) {
     factor_booleano();
     termino_booleano_1();
-    return 0;
+
+    return EXIT_SUCCESS;
 }
 
-int termino_booleano_1() {
-    if (strcmp(preanalisis.etiqueta, "AND") == 0) {
-        match("AND");
+int termino_booleano_1(void) {
+    tipo_t t = preanalisis.tipo;
+
+    if (t == TOK_AND) {
+        match(TOK_AND);
         factor_booleano();
         termino_booleano_1();
     }
-    return 0;
+
+    return EXIT_SUCCESS;
 }
 
-int factor_booleano() {
+int factor_booleano(void) {
     expresion_simple();
     factor_booleano_1();
-    return 0;
+
+    return EXIT_SUCCESS;
 }
 
-int factor_booleano_1() {
-    if (strcmp(preanalisis.etiqueta, "OPERADOR_RELACIONAL") == 0) {
-        if (strcmp(preanalisis.lexema, "MENOR") == 0) {
-            match("OPERADOR_RELACIONAL");
+int factor_booleano_1(void) {
+    tipo_t t = preanalisis.tipo;
+    const ts_entrada_t *e = buscar_ts_por_indice(preanalisis.data_u.ts_indice);
+
+    if (t == TOK_OP_REL) {
+        if (strcmp(e->lexema, "MENOR") == 0) {
+            match(TOK_OP_REL);
             match_simbolo("MENOR");
             expresion_simple();
             factor_booleano_1();
-        } else if (strcmp(preanalisis.lexema, "MENOR_IGUAL") == 0) {
-            match("OPERADOR_RELACIONAL");
+        } else if (strcmp(e->lexema, "MENOR_IGUAL") == 0) {
+            match(TOK_OP_REL);
             match_simbolo("MENOR_IGUAL");
             expresion_simple();
             factor_booleano_1();
-        } else if (strcmp(preanalisis.lexema, "DISTINTO") == 0) {
-            match("OPERADOR_RELACIONAL");
+        } else if (strcmp(e->lexema, "DISTINTO") == 0) {
+            match(TOK_OP_REL);
             match_simbolo("DISTINTO");
             expresion_simple();
             factor_booleano_1();
-        } else if (strcmp(preanalisis.lexema, "MAYOR") == 0) {
-            match("OPERADOR_RELACIONAL");
+        } else if (strcmp(e->lexema, "MAYOR") == 0) {
+            match(TOK_OP_REL);
             match_simbolo("MAYOR");
             expresion_simple();
             factor_booleano_1();
-        } else if (strcmp(preanalisis.lexema, "MAYOR_IGUAL") == 0) {
-            match("OPERADOR_RELACIONAL");
+        } else if (strcmp(e->lexema, "MAYOR_IGUAL") == 0) {
+            match(TOK_OP_REL);
             match_simbolo("MAYOR_IGUAL");
             expresion_simple();
             factor_booleano_1();
-        } else if (strcmp(preanalisis.lexema, "IGUAL") == 0) {
-            match("OPERADOR_RELACIONAL");
+        } else if (strcmp(e->lexema, "IGUAL") == 0) {
+            match(TOK_OP_REL);
             match_simbolo("IGUAL");
             expresion_simple();
             factor_booleano_1();
         }
     }
-    return 0;
+
+    return EXIT_SUCCESS;
 }
 
-int expresion_simple() {
+int expresion_simple(void) {
     termino();
     expresion_simple_1();
-    return 0;
+
+    return EXIT_SUCCESS;
 }
 
-int expresion_simple_1() {
-    if (strcmp(preanalisis.etiqueta, "ALGEBRAICO_ADITIVO") == 0 &&
-        strcmp(preanalisis.lexema, "SUMA") == 0) {
+int expresion_simple_1(void) {
+    tipo_t t = preanalisis.tipo;
+    const ts_entrada_t *e = buscar_ts_por_indice(preanalisis.data_u.ts_indice);
 
-        match("ALGEBRAICO_ADITIVO");
+    if (t == TOK_ALG_AD && strcmp(e->lexema, "SUMA") == 0) {
+        match(TOK_ALG_AD);
         match_simbolo("SUMA");
         termino();
         expresion_simple_1();
-    } else if (strcmp(preanalisis.etiqueta, "ALGEBRAICO_ADITIVO") == 0 &&
-            strcmp(preanalisis.lexema, "RESTA") == 0) {
-
-        match("ALGEBRAICO_ADITIVO");
+    } else if (t == TOK_ALG_AD && strcmp(e->lexema, "RESTA") == 0) {
+        match(TOK_ALG_AD);
         match_simbolo("RESTA");
         termino();
         expresion_simple_1();
     }
-    return 0;
+
+    return EXIT_SUCCESS;
 }
 
-int termino() {
+int termino(void) {
     factor();
     termino_1();
-    return 0;
+
+    return EXIT_SUCCESS;
 }
 
-int termino_1() {
-    if (strcmp(preanalisis.etiqueta, "ALGEBRAICO_MULTIPLICATIVO") == 0 && 
-        strcmp(preanalisis.lexema, "PRODUCTO") == 0) {
-        
-        match("ALGEBRAICO_MULTIPLICATIVO");
+int termino_1(void) {
+    tipo_t t = preanalisis.tipo;
+    const ts_entrada_t *e = buscar_ts_por_indice(preanalisis.data_u.ts_indice);
+
+    if (t == TOK_ALG_MUL && strcmp(e->lexema, "PRODUCTO") == 0) {
+        match(TOK_ALG_MUL);
         match_simbolo("PRODUCTO");
         factor();
         termino_1();
-    } else if (strcmp(preanalisis.etiqueta, "ALGEBRAICO_MULTIPLICATIVO") == 0 &&
-            strcmp(preanalisis.lexema, "COCIENTE") == 0) {
-
-        match("ALGEBRAICO_MULTIPLICATIVO");
+    } else if (t == TOK_ALG_MUL && strcmp(e->lexema, "COCIENTE") == 0) {
+        match(TOK_ALG_MUL);
         match_simbolo("COCIENTE");
         factor();
         termino_1();
     }
-    return 0;
+
+    return EXIT_SUCCESS;
 }
 
-int factor() {
-    if (strcmp(preanalisis.etiqueta, "ALGEBRAICO_ADITIVO") == 0 
-        && strcmp(preanalisis.lexema, "RESTA") == 0) {
-       
-        match("ALGEBRAICO_ADITIVO");
+int factor(void) {
+    tipo_t t = preanalisis.tipo;
+    const ts_entrada_t *e = buscar_ts_por_indice(preanalisis.data_u.ts_indice);
+
+    if (t == TOK_ALG_AD && strcmp(e->lexema, "RESTA") == 0) {
+        match(TOK_ALG_AD);
         match_simbolo("RESTA");
-        factor_();
-    } if (strcmp(preanalisis.etiqueta, "NOT") == 0) {
-        match("NOT");
-        factor_5();
-    } else if (strcmp(preanalisis.etiqueta, "NUMERO") == 0) {
-        match("NUMERO");
-    } else if (strcmp(preanalisis.etiqueta, "BOOLEAN") == 0) {
-        match("BOOLEAN");
-    } else if (strcmp(preanalisis.etiqueta, "IDENTIFICADOR") == 0) {
-        match("IDENTIFICADOR");
+        factor_3();
+    } if (t == TOK_NOT) {
+        match(TOK_NOT);
+        factor_4();
+    } else if (t == TOK_NUM) {
+        match(TOK_NUM);
+    } else if (t == TOK_BOOL) {
+        match(TOK_BOOL);
+    } else if (t == TOK_ID) {
+        match(TOK_ID);
         factor_1();
-    } else if (strcmp(preanalisis.etiqueta, "PARENTESIS_IZQUIERDO") == 0) {
-        match("PARENTESIS_IZQUIERDO");
+    } else if (t == TOK_PAR_IZQ) {
+        match(TOK_PAR_IZQ);
         factor_2();
     } else {
         // ERROR
-        printf("Error sintáctico: error en expresión. ");
-        printf("Se espera \"NOT\", \"NÚMERO\", ");
-        printf("\"BOOLEANO\", \"IDENTIFICADOR\" ó \"(\"");
+        char *str = "Error sintáctico: error en expresión. "
+                    "Se espera \"NOT\", \"NÚMERO\", "
+                    "\"BOOLEANO\", \"IDENTIFICADOR\" ó \"(\"";
 
-        if (strcmp(preanalisis.etiqueta, "NUMERO") == 0) {
-            printf(" y se encontró \"%ld\"", preanalisis.valor);
-        } else if (strcmp(preanalisis.lexema, "") != 0){
-            printf(" y se encontró \"%s\"", preanalisis.lexema);
-        }
-        printf("\n");
-        exit(1);
+        mostrar_error(ERR_MATCH, NULL, str, NULL);
+
+        exit(EXIT_FAILURE);
     }
-    return 0;
+
+    return EXIT_SUCCESS;
 }
 
-int factor_1() {
-    if (strcmp(preanalisis.etiqueta, "PARENTESIS_IZQUIERDO") == 0) {
-        match("PARENTESIS_IZQUIERDO");
+int factor_1(void) {
+    tipo_t t = preanalisis.tipo;
+
+    if (t == TOK_PAR_IZQ) {
+        match(TOK_PAR_IZQ);
         llamada_subprograma();
     }
-    return 0;
+
+    return EXIT_SUCCESS;
 }
 
-int factor_2() {
+int factor_2(void) {
     expresion();
-    match("PARENTESIS_DERECHO");
-    return 0;
+    match(TOK_PAR_DER);
+
+    return EXIT_SUCCESS;
 }
 
-int factor_4() {
-    if (strcmp(preanalisis.etiqueta, "NUMERO") == 0 ) {
-        match("NUMERO");
-    } else if (strcmp(preanalisis.etiqueta, "IDENTIFICADOR") == 0) {
-        match("IDENTIFICADOR");
-    } else if (strcmp(preanalisis.etiqueta, "PARENTESIS_IZQUIERDO") == 0) {
-        match("PARENTESIS_IZQUIERDO");
+int factor_3(void) {
+    tipo_t t = preanalisis.tipo;
+
+    if (t == TOK_NUM) {
+        match(TOK_NUM);
+    } else if (t == TOK_ID) {
+        match(TOK_ID);
+    } else if (t == TOK_PAR_IZQ) {
+        match(TOK_PAR_IZQ);
         factor_2();
     } else {
         // ERROR
-        printf("Error sintáctico: error en expresión. ");
-        printf("Se espera \"NÚMERO\", \"IDENTIFICADOR\" ó \"(\"");
+        char *str = "Error sintáctico: error en expresión. "
+                    "Se espera \"NÚMERO\", \"IDENTIFICADOR\" ó \"(\"";
 
-        if (strcmp(preanalisis.etiqueta, "NUMERO") == 0) {
-            printf(" y se encontró \"%ld\"", preanalisis.valor);
-        } else if (strcmp(preanalisis.lexema, "") != 0){
-            printf(" y se encontró \"%s\"", preanalisis.lexema);
-        }
-        printf("\n");
+        mostrar_error(ERR_MATCH, NULL, str, NULL);
+
+        exit(EXIT_FAILURE);
     }
-    return 0;
+
+    return EXIT_SUCCESS;
 }
 
-int factor_5() {
-    if (strcmp(preanalisis.etiqueta, "BOOLEAN") == 0) {
-        match("BOOLEAN");
-    } else if (strcmp(preanalisis.etiqueta, "IDENTIFICADOR") == 0) {
-        match("IDENTIFICADOR");
-    } else if (strcmp(preanalisis.etiqueta, "PARENTESIS_IZQUIERDO") == 0) {
-        match("PARENTESIS_IZQUIERDO");
-        //factor_1(); verificar
+int factor_4(void) {
+    tipo_t t = preanalisis.tipo;
+
+    if (t == TOK_BOOL) {
+        match(TOK_BOOL);
+    } else if (t == TOK_ID) {
+        match(TOK_ID);
+    } else if (t == TOK_PAR_IZQ) {
+        match(TOK_PAR_IZQ);
+        factor_1(); 
     } else {
         // ERROR
-        printf("Error sintáctico: error en expresión. ");
-        printf("Se espera \"BOOLEANO\", \"IDENTIFICADOR\" ó \"(\"");
+        char *str = "Error sintáctico: error en expresión. "
+                    "Se espera \"BOOLEANO\", \"IDENTIFICADOR\" ó \"(\"";
 
-        if (strcmp(preanalisis.etiqueta, "NUMERO") == 0) {
-            printf(" y se encontró \"%ld\"", preanalisis.valor);
-        } else if (strcmp(preanalisis.lexema, "") != 0){
-            printf(" y se encontró \"%s\"", preanalisis.lexema);
-        }
-        printf("\n");
+        mostrar_error(ERR_MATCH, NULL, str, NULL);
+
+        exit(EXIT_FAILURE);
     }
-    return 0;
+
+    return EXIT_SUCCESS;
 }
 
 int llamada_subprograma() {
