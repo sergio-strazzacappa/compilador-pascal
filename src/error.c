@@ -16,7 +16,7 @@ static const char *MENSAJES[] = {
 
     // Errores sintácticos
     "[ERROR] Token fuera del programa principal en línea %zu\n",
-    "[ERROR] %s\n"
+    "[ERROR] %s en línea %zu\n"
 };
 
 int mostrar_error(
@@ -30,6 +30,11 @@ int mostrar_error(
     assert(codigo >= 0 && codigo < lon_mensajes);
 
     switch (codigo) {
+        // no recibe parámetros
+        case ERR_UN_ARCHIVO:
+            fprintf(stderr, "%s", MENSAJES[codigo]);
+            break;
+
         // recibe archivo
         case ERR_USO:
         case ERR_NO_ARCHIVO:
@@ -49,23 +54,15 @@ int mostrar_error(
 
         // recibe lexema y línea
         case ERR_TOKEN:
+        case ERR_MATCH:
             assert(lexema != NULL);
             assert(linea != NULL);
 
-            fprintf(stderr, MENSAJES[codigo], *lexema, *linea);
+            fprintf(stderr, MENSAJES[codigo], lexema, *linea);
             break;
 
-        // no recibe parámetros
-        case ERR_UN_ARCHIVO:
-            fprintf(stderr, "%s", MENSAJES[codigo]);
-            break;
-
-        // recibe un mensaje
-        case ERR_MATCH:
-            fprintf(stderr, "%s", MENSAJES[codigo]);
-            break;
         default:
-            fprintf(stderr, "%s", MENSAJES[codigo]);
+            assert(0);
             break;
     }
 

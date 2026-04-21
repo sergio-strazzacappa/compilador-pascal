@@ -133,8 +133,12 @@ factor_3 -> `NUMERO` | `IDENTIFICADOR` | `(` factor_1
 
 factor_4 -> `BOOLEANO` | `IDENTIFICADOR` | `(` factor_1
 
-llamada_subprograma -> lista_expresiones ")"
+## Llamada subprograma
+
+llamada_subprograma -> lista_expresiones `)`
+
+## Lista expresiones
 
 lista_expresiones -> expresion lista_expresiones_1
 
-lista_expresiones_1 -> "," lista_expresiones | \lambda
+lista_expresiones_1 -> `,` lista_expresiones | $\lambda$

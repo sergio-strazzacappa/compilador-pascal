@@ -63,8 +63,8 @@ int buscar_ts(const char *const lexema) {
  */
 ts_entrada_t *buscar_ts_por_indice(const size_t indice) {
     if (indice >= ocupado) {
-        fprintf(stderr, "[ERROR] Indice fuera de rango en %s\n",
-            "buscar_ts_por_indice(int)");
+        fprintf(stderr, "[ERROR] Indice fuera de rango en %s [%zu >= %zu]\n",
+            "buscar_ts_por_indice(int)", indice, ocupado);
         return NULL;
     }
 

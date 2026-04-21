@@ -43,12 +43,9 @@ int factor_1(void);
 int factor_2(void);
 int factor_3(void);
 int factor_4(void);
-int llamada_subprograma();
-int lista_expresiones();
-int lista_expresiones_1();
-void to_upper_case(char *string, char *string_upper);
+int llamada_subprograma(void);
+int lista_expresiones(void);
+int lista_expresiones_1(void);
 int match(tipo_t tok_t);
-int match_palabra(char *lexema);
-int match_simbolo(char *lexema);
 
 #endif /* SINTACTICO_H */

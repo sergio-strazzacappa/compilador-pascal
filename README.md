@@ -21,6 +21,7 @@ soportados.
 ├── src/
 │   ├── error.c
 │   ├── lexico.c
+│   ├── main.c
 │   ├── sintactico.h
 │   ├── token.c
 │   ├── ts.c
@@ -66,7 +67,11 @@ typedef enum cod_e {
     // Errores léxicos
     ERR_COM_NO_CERRADO,
     ERR_COM_NO_ABIERTO,
-    ERR_TOKEN
+    ERR_TOKEN,
+
+    // Errores sintácticos
+    ERR_TOK_SOBRANTE,
+    ERR_MATCH
 } cod_t;
 
 int mostrar_error(

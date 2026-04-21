@@ -63,7 +63,7 @@ int obtener_siguiente_token(tok_t *token) {
         c = siguiente_caracter;
     }
 
-    if (c == EOF) {
+    if (!token_encontrado && c == EOF) {
         token->tipo = TOK_FIN;
         token->linea = linea;
     }
